@@ -8,7 +8,9 @@
 #include "Navigation/NavMesh/NavMeshLocalizer.h"
 #include "Navigation/NavSystem.h"
 
-#include "TacticComponent/NavMeshComponent.h"
+#include "TacticComponent/NavMesh/NavMeshComponent.h"
+#include "TacticComponent/NavGraph/NavGraphComponent.h"
+#include "TacticComponent/ExternalControl.h"
 
 #include "OperationComponent/KaramouzasComponent.h"
 #include "OperationComponent/HelbingComponent.h"
@@ -16,8 +18,12 @@
 #include "OperationComponent/ZanlungoComponent.h"
 #include "OperationComponent/PedVOComponent.h"
 #include "OperationComponent/GCFComponent.h"
+#include "OperationComponent/BicycleComponent.h"
+#include "OperationComponent/StrictComponent.h"
 
 #include "StrategyComponent/FSM/FsmStartegy.h"
+
+using namespace DirectX::SimpleMath;
 
 namespace FusionCrowd
 {
@@ -25,8 +31,7 @@ namespace FusionCrowd
 	{
 	public:
 		SimulatorFacadeImpl(std::shared_ptr<Simulator> sim) : _sim(sim)
-		{
-		}
+		{}
 
 		void DoStep(float timeStep)
 		{
@@ -40,6 +45,12 @@ namespace FusionCrowd
 			return OperationStatus::OK;
 		}
 
+		OperationStatus SetAgentTactic(size_t agentId, ComponentId tacticID)
+		{
+			_sim->SetTacticComponent(agentId, tacticID);
+			return OperationStatus::OK;
+		}
+
 		OperationStatus SetAgentStrategy(size_t agentId, ComponentId strategyId)
 		{
 			_sim->SetStrategyComponent(agentId, strategyId);
@@ -47,9 +58,23 @@ namespace FusionCrowd
 			return OperationStatus::OK;
 		}
 
-		OperationStatus SetAgentGoal(size_t agentId, float x, float y)
+		OperationStatus SetAgentGoal(size_t agentId, Point p)
 		{
-			_sim->SetAgentGoal(agentId, DirectX::SimpleMath::Vector2(x, y));
+			_sim->SetAgentGoal(agentId, _sim->GetGoalFactory().CreatePointGoal(p));
+
+			return OperationStatus::OK;
+		}
+
+		OperationStatus SetAgentGoal(size_t agentId, Disk d)
+		{
+			_sim->SetAgentGoal(agentId, _sim->GetGoalFactory().CreateDiscGoal(d));
+
+			return OperationStatus::OK;
+		}
+
+		OperationStatus SetAgentGoal(size_t agentId, Rect r)
+		{
+			_sim->SetAgentGoal(agentId, _sim->GetGoalFactory().CreateRectGoal(r));
 
 			return OperationStatus::OK;
 		}
@@ -62,15 +87,52 @@ namespace FusionCrowd
 		size_t AddAgent(
 			float x, float y,
 			ComponentId opId,
+			ComponentId tacticId,
 			ComponentId strategyId
 		)
 		{
-			return _sim->AddAgent(x, y, opId, strategyId);
+			return _sim->AddAgent(Vector2(x, y), opId, tacticId, strategyId);
+		}
+
+		size_t AddAgent(
+			float x, float y, float radius, float preferedVelocity,
+			ComponentId opId,
+			ComponentId tacticId,
+			ComponentId strategyId
+		)
+		{
+			AgentSpatialInfo info;
+			info.radius = radius;
+			info.maxSpeed = preferedVelocity * 1.5f;
+			info.prefSpeed = preferedVelocity;
+			info.SetPos(Vector2(x, y));
+
+			return _sim->AddAgent(std::move(info), opId, tacticId, strategyId);
+		}
+
+
+		bool UpdateAgent(AgentParams params) {
+			return _sim->UpdateAgentParams(params);
+		}
+
+		bool UpdateNeighbourSearchShape(size_t agentId, Disk disk)
+		{
+			return _sim->UpdateNeighbourSearchShape(agentId, disk);
+		}
+
+		bool UpdateNeighbourSearchShape(size_t agentId, Cone cone)
+		{
+			return _sim->UpdateNeighbourSearchShape(agentId, cone);
 		}
 
 		OperationStatus RemoveAgent(size_t agentId)
 		{
-			return OperationStatus::NotImplemented;
+			return _sim->RemoveAgent(agentId);
+		}
+
+		OperationStatus RemoveGroup(size_t groupId)
+		{
+			return _sim->RemoveGroup(groupId);
 		}
 
 		IRecording & GetRecording()
@@ -87,7 +149,6 @@ namespace FusionCrowd
 			return _sim->GetAgentCount();
 		}
 
-
 		void SetAgentStrategyParam(size_t agentId, ComponentId strategyId, ModelAgentParams & params)
 		{
 			_sim->SetAgentStrategyParam(agentId, strategyId, params);
@@ -98,49 +159,44 @@ namespace FusionCrowd
 			return _sim->GetStrategy(strategyId);
 		}
 
-		//nav mesh draw export
-		size_t GetVertexCount() {
-			return _sim->GetVertexCount();
+		INavMeshPublic* GetNavMesh() const
+		{
+			return _sim->GetNavSystem()->GetPublicNavMesh();
 		}
 
-		bool GetVertices(FCArray<NavMeshVetrex> & output) {
-			return _sim->GetVertices(output);
+		INavSystemPublic* GetNavSystem() const
+		{
+			return _sim->GetNavSystem();
 		}
 
-		size_t GetNodesCount() {
-			return _sim->GetNodesCount();
+		size_t AddGridGroup(float x, float y, size_t agentsInRow, float interAgtDist)
+		{
+			return _sim->AddGridGroup(Vector2(x, y), agentsInRow, interAgtDist);
 		}
 
-		size_t GetNodeVertexCount(size_t node_id) {
-			return _sim->GetNodeVertexCount(node_id);
+		size_t AddGuidedGroup(size_t leaderId)
+		{
+			return _sim->AddGuidedGroup(leaderId);
 		}
 
-		bool GetNodeVertexInfo(FCArray<int> & output, size_t node_id) {
-			return _sim->GetNodeVertexInfo(output, node_id);
+		void RemoveAgentFromGroup(size_t agentId, size_t groupId)
+		{
+			_sim->RemoveAgentFromGroup(agentId, groupId);
 		}
 
-		size_t GetEdgesCount() {
-			return _sim->GetEdgesCount();
+		void SetGroupGoal(size_t groupId, float goalX, float goalY)
+		{
+			_sim->SetGroupGoal(groupId, DirectX::SimpleMath::Vector2(goalX, goalY));
 		}
 
-		bool GetEdges(FCArray<EdgeInfo> & output) {
-			return _sim->GetEdges(output);
+		void AddAgentToGroup(size_t agentId, size_t groupId)
+		{
+			_sim->AddAgentToGroup(agentId, groupId);
 		}
 
-		size_t GetObstaclesCount() {
-			return _sim->GetObstaclesCount();
-		}
-
-		bool GetObstacles(FCArray<EdgeInfo> & output) {
-			return _sim->GetObstacles(output);
-		}
-
-		float CutPolygonFromMesh(FCArray<NavMeshVetrex> & polygon) {
-			return _sim->CutPolygonFromMesh(polygon);
-		}
-
-		bool ExportMeshToFile(char* file_name) {
-			return _sim->ExportMeshToFile(file_name);
+		size_t GetGroupDummyAgent(size_t groupId)
+		{
+			return _sim->GetGroup(groupId)->GetDummyId();
 		}
 
 	private:
@@ -153,19 +209,84 @@ namespace FusionCrowd
 		BuilderImpl(): sim(std::make_shared<Simulator>())
 		{
 			impl = new SimulatorFacadeImpl(sim);
-		}
-
-		ISimulatorBuilder*  WithNavMesh(const char* path)
-		{
-			auto localizer = std::make_shared<NavMeshLocalizer>(path, true);
-			navSystem = std::make_shared<NavSystem>(localizer);
-			navSystem->Init();
+			navSystem = std::make_shared<NavSystem>();
 
 			sim->UseNavSystem(navSystem);
+		}
+
+		ISimulatorBuilder* WithExternal(IExternalControllInterface*& returned_controll)
+		{
+			auto tactic = std::make_shared<FusionCrowd::ExternalControl>(sim);
+			sim->AddTactic(tactic);
+			returned_controll = tactic.get();
+
+			atLeastOneTactic = true;
+
+			return this;
+		}
+
+		ISimulatorBuilder* WithNavMesh(const char* path)
+		{
+			auto localizer = std::make_shared<NavMeshLocalizer>(path, true);
+			navSystem->SetNavMesh(localizer);
 
 			auto spatial_query = std::make_shared<NavMeshSpatialQuery>(localizer);
 			auto tactic = std::make_shared<FusionCrowd::NavMeshComponent>(sim, localizer, spatial_query);
 			sim->AddTactic(tactic);
+
+			atLeastOneTactic = true;
+
+			return this;
+		}
+
+		ISimulatorBuilder* WithNavGraph(const char* path)
+		{
+			std::ifstream f(path);
+
+			if (!f.is_open())
+			{
+				throw std::ios_base::failure("Can't load navgraph");
+			}
+
+			navSystem->SetNavGraph(NavGraph::LoadFromStream(f));
+
+			auto tactic = std::make_shared<FusionCrowd::NavGraphComponent>(sim, navSystem);
+			sim->AddTactic(tactic);
+
+			atLeastOneTactic = true;
+
+			return this;
+		}
+
+		ISimulatorBuilder* WithNavGraph(FCArray<Export::NavGraphNode> & nodesArray, FCArray<Export::NavGraphEdge> & edgesArray)
+		{
+			std::vector<NavGraphNode> nodes;
+			for(auto& n : nodesArray)
+			{
+				nodes.push_back({
+					n.id, DirectX::SimpleMath::Vector2(n.x, n.y)
+				});
+			}
+
+			std::vector<NavGraphEdge> edges;
+			size_t eId = 0;
+			for(auto& e : edgesArray)
+			{
+				edges.push_back({
+					eId++,
+					e.nodeFrom,
+					e.nodeTo,
+					e.weight,
+					e.width
+				});
+			}
+
+			navSystem->SetNavGraph(std::make_unique<NavGraph>(nodes, edges));
+
+			auto tactic = std::make_shared<FusionCrowd::NavGraphComponent>(sim, navSystem);
+			sim->AddTactic(tactic);
+
+			atLeastOneTactic = true;
 
 			return this;
 		}
@@ -192,9 +313,18 @@ namespace FusionCrowd
 				case ComponentIds::GCF_ID:
 					sim->AddOpModel(std::make_shared<GCF::GCFComponent>(navSystem));
 					break;
+				case ComponentIds::BICYCLE:
+					sim->AddOpModel(std::make_shared<Bicycle::BicycleComponent>(navSystem));
+					break;
+				case ComponentIds::STRICT_ID:
+					sim->AddOpModel(std::make_shared<StrictComp::StrictComponent>(navSystem));
+					break;
 				default:
 					break;
 			}
+
+			atLeastOneOperational = true;
+
 			return this;
 		}
 
@@ -223,12 +353,23 @@ namespace FusionCrowd
 
 		ISimulatorFacade* Build()
 		{
+			if(!atLeastOneOperational)
+				throw "At least one op component has to be defined";
+
+			if(!atLeastOneTactic)
+				throw "At least one tactic component has to be defined";
+
+			navSystem->Init();
+
 			return impl;
 		}
 	private:
 		ComponentId nextExternalStrategyId = 900;
 
 		SimulatorFacadeImpl* impl;
+
+		bool atLeastOneTactic      = false;
+		bool atLeastOneOperational = false;
 
 		std::shared_ptr<Simulator> sim;
 		std::shared_ptr<NavSystem> navSystem;

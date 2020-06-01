@@ -6,21 +6,27 @@
 #include <iterator>
 #include <direct.h>
 
+#include "TestCases/ITestCase.h"
+
 #include "TestCases/TradeshowTestCase.h"
 #include "TestCases/NeighbourSearchBenchCase.h"
-#include "TestCases/ZanlungoCase.h"
 #include "TestCases/CrossingTestCase.h"
 #include "TestCases/PinholeTestCase.h"
 #include "TestCases/TshapedFancyTestCase.h"
-#include "TestCases/FsmTestCase.h"
+#include "TestCases/ExchangeCircleCase.h"
 #include "TestCases/StenkaNaStenkuTestCase.h"
-#include "TestCases/ITestCase.h"
+
+#include "TestCases/Components/ZanlungoCase.h"
+#include "TestCases/Components/NavGraphTestCase.h"
+#include "TestCases/Components/FsmTestCase.h"
+#include "TestCases/Components/GoalShapeTestCase.h"
+
+#include "TestCases/Groups/GroupMovementTestCase.h"
+#include "TestCases/Groups/GroupPerformanceTestCase.h"
 
 #include "Export/ComponentId.h"
 #include "Export/Export.h"
 #include "Util/RecordingSerializer.h"
-
-#include "NavGraph/NavGraph.h"
 
 #include "ThirdParty/date.h"
 
@@ -49,7 +55,6 @@ void Run(std::shared_ptr<ITestCase> testCase, std::vector<long long> & outMeasur
 		sim->DoStep();
 
 		high_resolution_clock::time_point t2 = high_resolution_clock::now();
-
 		long long duration = duration_cast<microseconds>(t2 - t1).count();
 		measurements.push_back(duration);
 
@@ -104,54 +109,26 @@ void WriteToFile(std::shared_ptr<ITestCase> testCase, std::vector<long long> mea
 
 int main()
 {
-	std::ifstream navGraphFile("Resources\\twocycles.navgraph");
-	auto navGraph = FusionCrowd::NavGraph::LoadFromStream(navGraphFile);
-
-	std::cout << "Navgraph test";
-	for(auto & node : navGraph.GetAllNodes())
-	{
-		std::cout << "Node id=" << node.id << " pos=(" << node.position.x << ", " << node.position.y << ")" << std::endl;
-		std::cout << "Out neighbours:" << std::endl;
-		for(auto & neighbour : navGraph.GetOutNeighbours(node.id))
-		{
-			std::cout << "  id=" << neighbour.id << std::endl;
-		}
-
-		std::cout << "In neighbours:" << std::endl;
-		for(auto & neighbour : navGraph.GetInNeighbours(node.id))
-		{
-			std::cout << "  id=" << neighbour.id << std::endl;
-		}
-	}
-
-	return 0;
-
 	std::vector<std::shared_ptr<ITestCase>> cases =
 	{
-
-		// std::shared_ptr<ITestCase>((ITestCase*) new FsmTestCase(FusionCrowd::ComponentIds::ORCA_ID, 50, 2000, true)),
-		std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 4000, false)),
+		// std::shared_ptr<ITestCase>((ITestCase*) new FsmTestCase(FusionCrowd::ComponentIds::BICYCLE, 50, 2000, true)),
+		// std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 1000, true)),
 		// std::shared_ptr<ITestCase>((ITestCase*) new ZanlungoCase()),
 		// std::shared_ptr<ITestCase>((ITestCase*) new CrossingTestCase(FusionCrowd::ComponentIds::KARAMOUZAS_ID, 30, 1000, false)),
-		// std::shared_ptr<ITestCase>((ITestCase*) new PinholeTestCase(FusionCrowd::ComponentIds::KARAMOUZAS_ID, 200, 1000)),
-		// std::shared_ptr<ITestCase>((ITestCase*) new TshapedFancyTestCase(FusionCrowd::ComponentIds::ORCA_ID, 200, 1000, true)),
-		// std::shared_ptr<ITestCase>((ITestCase*) new StenkaNaStenkuTestCase(10000, 5000, false)),
+		// std::shared_ptr<ITestCase>((ITestCase*) new PinholeTestCase(FusionCrowd::ComponentIds::KARAMOUZAS_ID, 2, 100)),
+		// std::shared_ptr<ITestCase>((ITestCase*) new TshapedFancyTestCase(FusionCrowd::ComponentIds::ORCA_ID, 4, 1000, true)),
+		// std::shared_ptr<ITestCase>((ITestCase*) new NavGraphTestCase(100, 1000, true)),
+		// std::shared_ptr<ITestCase>((ITestCase*) new StenkaNaStenkuTestCase(500, 1000, true)),
+		// std::shared_ptr<ITestCase>((ITestCase*) new GroupMovementTestCase(1000, true)),
+		// std::shared_ptr<ITestCase>((ITestCase*) new ExchangeCircleCase(7500, 1000, FusionCrowd::ComponentIds::ORCA_ID, false)),
+		// std::shared_ptr<ITestCase>((ITestCase*) new GroupPerformanceTestCase()),
+		std::shared_ptr<ITestCase>((ITestCase*) new GoalShapeTestCase())
 	};
-
-	/*
-	// Overclocking setup
-	cases.push_back(std::shared_ptr<ITestCase>((ITestCase*) new NeighbourSearchBenchCase(3.0f)));
-	cases.push_back(std::shared_ptr<ITestCase>((ITestCase*) new NeighbourSearchBenchCase(3.0f)));
-	for (float coeff = 0.5; coeff < 10; coeff += 0.25)
-	{
-		cases.push_back(std::shared_ptr<ITestCase>((ITestCase*) new NeighbourSearchBenchCase(coeff)));
-	}
-	*/
 
 	std::vector<long long> measurements;
 	time_point startTime;
 
-	std::string folderName = date::format("%Y%m%d", std::chrono::system_clock::now());
+	std::string folderName = "Runs\\" + date::format("%Y%m%d", std::chrono::system_clock::now());
 	_mkdir(folderName.c_str());
 
 	for(auto testCase : cases)
@@ -177,5 +154,4 @@ int main()
 
 		std::cout << std::endl << std::endl;
 	}
-
 }

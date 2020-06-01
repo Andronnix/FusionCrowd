@@ -24,14 +24,14 @@ namespace TestFusionCrowd
 
 		for (int i = 0; i < (_agentsNum / 2 - 1); i++)
 		{
-			size_t id = _sim->AddAgent(RandFloat(80.0f, 120.0f), RandFloat(0.0f, 40.0f), _opComponent, -1);
-			_sim->SetAgentGoal(id, RandFloat(80.0f, 120.0f), RandFloat(160.0f, 200.0f));
+			size_t id = _sim->AddAgent(RandFloat(80.0f, 120.0f), RandFloat(0.0f, 40.0f), _opComponent, ComponentIds::NAVMESH_ID, -1);
+			_sim->SetAgentGoal(id, Point { RandFloat(80.0f, 120.0f), RandFloat(160.0f, 200.0f) });
 		}
 
 		for (int i = (_agentsNum / 2 - 1); i < _agentsNum; i++)
 		{
-			size_t id = _sim->AddAgent(RandFloat(0.0f, 40.0f), RandFloat(80.0f, 120.0f), _opComponent, -1);
-			_sim->SetAgentGoal(id, RandFloat(160.0f, 200.0f), RandFloat(80.0f, 120.0f));
+			size_t id = _sim->AddAgent(RandFloat(0.0f, 40.0f), RandFloat(80.0f, 120.0f), _opComponent, ComponentIds::NAVMESH_ID, -1);
+			_sim->SetAgentGoal(id, Point { RandFloat(160.0f, 200.0f), RandFloat(80.0f, 120.0f) });
 		}
 	}
 }

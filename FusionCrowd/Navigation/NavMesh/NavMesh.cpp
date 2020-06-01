@@ -1,7 +1,7 @@
 #include <fstream>
 #include "NavMesh.h"
 #include "NavMeshEdge.h"
-#include "NavMeshObstacle.h";
+#include "NavMeshObstacle.h"
 #include <iostream>
 #include <fstream>
 
@@ -65,7 +65,7 @@ namespace FusionCrowd
 			edge._distance = (edge._node0->getCenter() - edge._node1->getCenter()).Length();
 
 			// Confirm that point is on the left when looking from node0
-			if (FusionCrowd::MathUtil::det(edge._dir, edge._node0->_center - edge._point) > 0.f)
+			if (FusionCrowd::Math::det(edge._dir, edge._node0->_center - edge._point) > 0.f)
 			{
 				NavMeshNode* tmp = edge._node0;
 				edge._node0 = edge._node1;
@@ -249,7 +249,7 @@ namespace FusionCrowd
 			{
 				obst = (NavMeshObstacle &) *obst._nextObstacle;
 
-				if(MathUtil::leftOf(obst._prevObstacle->getP0(), obst.getP0(), obst.getP1()) >= 0)
+				if(Math::leftOf(obst._prevObstacle->getP0(), obst.getP0(), obst.getP1()) >= 0)
 					reverted++;
 
 
@@ -407,12 +407,20 @@ namespace FusionCrowd
 		}
 	}
 
-
 	NavMesh::~NavMesh()
 	{
 		clear();
 	}
 
+	size_t NavMesh::GetVersion() const
+	{
+		return _version;
+	}
+
+	void NavMesh::IncVersion()
+	{
+		_version++;
+	}
 
 	size_t NavMesh::GetVertexCount() {
 		return vCount;
@@ -510,7 +518,8 @@ namespace FusionCrowd
 		return obstCount;
 	}
 
-	bool NavMesh::GetObstacles(FCArray<EdgeInfo> & output) {
+	bool NavMesh::GetObstacles(FCArray<EdgeInfo> & output)
+	{
 		if (output.size() < obstCount)
 		{
 			return false;
@@ -531,10 +540,10 @@ namespace FusionCrowd
 		return true;
 	}
 
-
-	bool NavMesh::ExportToFile(std::string file_name) {
+	bool NavMesh::ExportNavMeshToFile(char* file_name)
+	{
 		std::ofstream file;
-		file.open(file_name);
+		file.open(std::string(file_name));
 		std::vector<Vector2> tmpv;
 		//vertices
 		file << vCount + eCount*2 +obstCount*2 << '\n';

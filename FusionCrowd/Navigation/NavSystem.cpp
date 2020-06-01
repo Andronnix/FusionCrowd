@@ -2,12 +2,15 @@
 
 
 #include "Math/Util.h"
-#include "TacticComponent/NavMeshComponent.h"
+#include "Math/consts.h"
+#include "TacticComponent/NavMesh/NavMeshComponent.h"
 
 #include "Navigation/AgentSpatialInfo.h"
 #include "Navigation/Obstacle.h"
 #include "Navigation/NavMesh/NavMesh.h"
-#include "Navigation/NavMesh/NavMeshModifyer.h"
+#include "Navigation/NavMesh/Modification/ModificationProcessor.h"
+#include "Navigation/NavMesh//Modification/PolygonPreprocessor.h"
+#include "Navigation/NavMesh//Modification/EdgeObstacleReplaner.h"
 #include "Navigation/SpatialQuery/NavMeshSpatialQuery.h"
 #include "Navigation/FastFixedRadiusNearestNeighbors/NeighborsSeeker.h"
 
@@ -24,25 +27,23 @@ namespace FusionCrowd
 	class NavSystem::NavSystemImpl
 	{
 	public:
-		NavSystemImpl(std::shared_ptr<NavMeshLocalizer> localizer) : _localizer(localizer)
+		NavSystemImpl() { }
+
+		void SetNavMesh(std::shared_ptr<NavMeshLocalizer> localizer)
 		{
+			_localizer = localizer;
 			_navMeshQuery = std::make_unique<NavMeshSpatialQuery>(localizer);
 			_navMesh = localizer->getNavMesh();
 		}
 
-		~NavSystemImpl() { }
-
-		//TEST METHOD, MUST BE DELETED
-		int CountNeighbors(size_t agentId) const
+		void SetNavGraph(std::unique_ptr<NavGraph> navGraph)
 		{
-			auto neighbors = _agentsNeighbours.find(agentId);
-			if (neighbors != _agentsNeighbours.end()) {
-				return neighbors->second.size();
-			}
-			else
-			{
-				return 0;
-			}
+			_navGraph = std::move(navGraph);
+		}
+
+		NavGraph* GetNavGraph()
+		{
+			return _navGraph.get();
 		}
 
 		void SetAgentsSensitivityRadius(float radius)
@@ -50,17 +51,29 @@ namespace FusionCrowd
 			_agentsSensitivityRadius = radius;
 		}
 
-		void AddAgent(size_t agentId, DirectX::SimpleMath::Vector2 position)
-		{
-			AgentSpatialInfo info;
-			info.id = agentId;
-			info.pos = position;
-			_agentsInfo[agentId] = info;
-		}
-
 		void AddAgent(AgentSpatialInfo spatialInfo)
 		{
-			_agentsInfo[spatialInfo.id] = spatialInfo;
+			if(_agentsInfo.find(spatialInfo.id) != _agentsInfo.end())
+				return;
+
+			if(spatialInfo.type == AgentSpatialInfo::AGENT)
+				_numAgents++;
+			else
+				_numGroups++;
+
+			_agentsInfo[spatialInfo.id] = std::move(spatialInfo);
+			_agentsNeighbours[spatialInfo.id] = std::vector<NeighborInfo>();
+		}
+
+		void RemoveAgent(size_t id)
+		{
+			if(_agentsInfo.erase(id))
+			{
+				if (_agentsInfo[id].type == AgentSpatialInfo::AGENT)
+					_numAgents--;
+				else
+					_numGroups--;
+			}
 		}
 
 		AgentSpatialInfo & GetSpatialInfo(size_t agentId)
@@ -68,42 +81,14 @@ namespace FusionCrowd
 			return _agentsInfo.at(agentId);
 		}
 
-		std::map<size_t, AgentSpatialInfo> GetAgentsSpatialInfos() {
-			return _agentsInfo;
-		}
-
-		struct NearAgent
+		std::vector<NeighborInfo> GetNeighbours(size_t agentId) const
 		{
-			AgentSpatialInfo agt;
-			float distSq;
-			NearAgent(AgentSpatialInfo agt, float dist) : agt(agt), distSq(dist) {}
-		};
-
-		const std::vector<AgentSpatialInfo> GetNeighbours(size_t agentId) const
-		{
-			const AgentSpatialInfo & agent = _agentsInfo.at(agentId);
 			auto cache = _agentsNeighbours.find(agentId);
 
 			if(cache == _agentsNeighbours.end())
-				return std::vector<AgentSpatialInfo>();
+				return std::vector<NeighborInfo>();
 
 			return cache->second;
-
-			/*
-			std::vector<NearAgent> neighbours;
-			for(const AgentSpatialInfo & other : cache->second)
-			{
-				neighbours.push_back({ other, (agent.pos - other.pos).LengthSquared()});
-			}
-
-			std::sort(neighbours.begin(), neighbours.end(), [](const NearAgent & a, const NearAgent & b) { return a.distSq < b.distSq; });
-
-			std::vector<AgentSpatialInfo> result;
-			for(const NearAgent & na : neighbours)
-				result.push_back(na.agt);
-
-			return result;
-			*/
 		}
 
 		std::vector<Obstacle> GetClosestObstacles(size_t agentId)
@@ -111,16 +96,17 @@ namespace FusionCrowd
 			std::vector<Obstacle> result;
 			AgentSpatialInfo & agent = _agentsInfo.at(agentId);
 
-
-			size_t nodeId = _localizer->getNodeId(agent.pos);
-			if(nodeId == NavMeshLocation::NO_NODE)
-				return result;
-
-			for(size_t obstId : _navMeshQuery->ObstacleQuery(agent.pos))
+			if ((agent.useNavMeshObstacles) && (_navMesh != NULL))
 			{
-				result.push_back(_navMesh->GetObstacle(obstId));
-			}
+				size_t nodeId = _localizer->getNodeId(agent.GetPos());
+				if (nodeId == NavMeshLocation::NO_NODE)
+					return result;
 
+				for (size_t obstId : _navMeshQuery->ObstacleQuery(agent.GetPos()))
+				{
+					result.push_back(_navMesh->GetObstacle(obstId));
+				}
+			}
 			return result;
 		}
 
@@ -130,50 +116,65 @@ namespace FusionCrowd
 			{
 				AgentSpatialInfo & currentInfo = info.second;
 
-				UpdatePos(currentInfo, timeStep);
-				UpdateOrient(currentInfo, timeStep);
+				Vector2 newPos, newVel, newOrient;
+				UpdatePos(currentInfo, timeStep, newPos, newVel);
+				UpdateOrient(currentInfo, timeStep, newOrient);
+
+				currentInfo.Update(newPos, newVel, newOrient);
 			}
 
 			UpdateNeighbours();
 		}
 
-		void UpdatePos(AgentSpatialInfo & agent, float timeStep)
+		void UpdatePos(AgentSpatialInfo & agent, float timeStep, Vector2 & updatedPos, Vector2 & updatedVel)
 		{
-			float delV = (agent.vel - agent.velNew).Length();
-			if (isnan(delV)) {
-				agent.velNew = agent.vel;
-				delV = 0;
-			}
+			const float delV = (agent.GetVel() - agent.velNew).Length();
 
-			if (agent.inertiaEnabled && delV > agent.maxAccel * timeStep) {
-				float w = agent.maxAccel * timeStep / delV;
-				agent.vel = (1.f - w) * agent.vel + w * agent.velNew;
-			}
-			else {
-				agent.vel = agent.velNew;
-			}
-
-			agent.pos += agent.vel * timeStep;
-		}
-
-		void UpdateOrient(AgentSpatialInfo & agent, float timeStep)
-		{
-			if(!agent.inertiaEnabled)
+			if (isnan(delV))
 			{
-				agent.orient = agent.vel;
-				agent.orient.Normalize();
+				updatedVel = agent.GetVel();
+				updatedPos = agent.GetPos();
+
 				return;
 			}
 
-			float speed = agent.vel.Length();
-			if (abs(speed) <= MathUtil::EPS)
+			if (agent.inertiaEnabled && delV > agent.maxAccel * timeStep)
 			{
-				speed = speed < 0 ? -MathUtil::EPS : MathUtil::EPS;
+				const float w = agent.maxAccel * timeStep / delV;
+				updatedVel = (1.f - w) * agent.GetVel() + w * agent.velNew;
+			}
+			else
+			{
+				updatedVel = agent.velNew;
+			}
+
+			updatedPos = agent.GetPos() + agent.GetVel() * timeStep;
+			updatedPos = _localizer->GetClosestAvailablePoint(updatedPos);
+		}
+
+		void UpdateOrient(const AgentSpatialInfo & agent, float timeStep, Vector2 & newOrient)
+		{
+			float speed = agent.GetVel().Length();
+			if(speed < Math::EPS)
+			{
+				newOrient = Vector2(0, 1);
+				return;
+			}
+
+			if(!agent.inertiaEnabled)
+			{
+				agent.GetVel().Normalize(newOrient);
+				return;
+			}
+
+			if (abs(speed) <= Math::EPS)
+			{
+				speed = speed < 0 ? -Math::EPS : Math::EPS;
 			}
 
 			const float speedThresh = agent.prefSpeed / 3.f;
-			Vector2 newOrient(agent.orient); // by default new is old
-			Vector2 moveDir = agent.vel / speed;
+
+			Vector2 moveDir = agent.GetVel() / speed;
 			if (speed >= speedThresh)
 			{
 				newOrient = moveDir;
@@ -193,180 +194,93 @@ namespace FusionCrowd
 			// Now limit angular velocity.
 			const float MAX_ANGLE_CHANGE = timeStep * agent.maxAngVel;
 			float maxCt = cos(MAX_ANGLE_CHANGE);
-			float ct = newOrient.Dot(agent.orient);
+			float ct = newOrient.Dot(agent.GetOrient());
 			if (ct < maxCt)
 			{
 				// changing direction at a rate greater than _maxAngVel
 				float maxSt = sin(MAX_ANGLE_CHANGE);
-				if (MathUtil::det(agent.orient, newOrient) > 0.f)
+				if (Math::det(agent.GetOrient(), newOrient) > 0.f)
 				{
 					// rotate _orient left
-					agent.orient = Vector2(
-						maxCt * agent.orient.x - maxSt * agent.orient.y,
-						maxSt * agent.orient.x + maxCt * agent.orient.y
+					newOrient = Vector2(
+						maxCt * agent.GetOrient().x - maxSt * agent.GetOrient().y,
+						maxSt * agent.GetOrient().x + maxCt * agent.GetOrient().y
 					);
 				}
 				else
 				{
 					// rotate _orient right
-					agent.orient = Vector2(
-						maxCt * agent.orient.x + maxSt * agent.orient.y,
-						-maxSt * agent.orient.x + maxCt * agent.orient.y
+					newOrient = Vector2(
+						maxCt * agent.GetOrient().x + maxSt * agent.GetOrient().y,
+						-maxSt * agent.GetOrient().x + maxCt * agent.GetOrient().y
 					);
 				}
-			}
-			else
-			{
-				agent.orient = newOrient;
 			}
 		}
 
 		void UpdateNeighbours()
 		{
-			int numAgents = _agentsInfo.size();
+			std::vector<NeighborsSeeker::SearchRequest> agentRequests;
 
-			if(numAgents < 2)
-				return;
-
-			std::vector<AgentSpatialInfo> agentsInfos;
-			agentsInfos.reserve(numAgents);
-			for (auto info : _agentsInfo) {
-				agentsInfos.push_back(info.second);
+			for (auto & info : _agentsInfo)
+			{
+				agentRequests.push_back(info.second);
 			}
 
-			float minX = std::numeric_limits<float>::max();
-			float minY = std::numeric_limits<float>::max();
-			float maxX = std::numeric_limits<float>::min();
-			float maxY = std::numeric_limits<float>::min();
-			for (auto & info : agentsInfos) {
-				if (info.pos.x < minX) minX = info.pos.x;
-				if (info.pos.x > maxX) maxX = info.pos.x;
-				if (info.pos.y < minY) minY = info.pos.y;
-				if (info.pos.y > maxY) maxY = info.pos.y;
+			for(const auto& p : _neighborsSeeker.FindNeighborsCpu(agentRequests))
+			{
+				_agentsNeighbours[p.agentId] = p.neighbors;
+				_agentsInfo[p.agentId].setOverlaping(p.isOverlapped);
 			}
-
-			Point *agentsPositions = new Point[numAgents];
-			int i = 0;
-			for (auto & info : agentsInfos) {
-				agentsPositions[i].x = info.pos.x - minX;
-				agentsPositions[i].y = info.pos.y - minY;
-				i++;
-			}
-
-			auto allNeighbors = _neighborsSeeker.FindNeighbors(agentsPositions, numAgents, maxX - minX, maxY - minY, _agentsSensitivityRadius, false);
-			//NeighborsSeeker::PointNeighbors *allNeighbors = new NeighborsSeeker::PointNeighbors[numAgents];
-			//for (int i = 0; i < numAgents; i++) {
-			//	allNeighbors[i] = { i, 0 };
-			//}
-
-			_agentsNeighbours.reserve(numAgents);
-			i = 0;
-
-			for (auto & info : agentsInfos) {
-
-				auto dataPair = _agentsNeighbours.find(info.id);
-				if (dataPair == _agentsNeighbours.end()) {
-					dataPair = _agentsNeighbours.insert({ info.id, std::vector<AgentSpatialInfo>() }).first;
-				}
-				else
-				{
-					dataPair->second.clear();
-				}
-
-				auto neighbors = allNeighbors[i];
-
-				auto &neighborsInfos = dataPair->second;
-				neighborsInfos.reserve(neighbors.neighborsCount);
-
-				for (int j = 0; j < neighbors.neighborsCount; j++) {
-					neighborsInfos.push_back(agentsInfos[neighbors.neighborsID[j]]);
-				}
-
-				i++;
-			}
-
-			delete[] agentsPositions;
 		}
 
 		void Init() {
 			UpdateNeighbours();
 		}
 
-		void SetGridCoeff(float coeff) {
-			_neighborsSeeker.gridCellCoeff = coeff;
-		}
-
-		//nav mesh draw export
-		size_t GetVertexCount() {
-			return _navMesh->GetVertexCount();
-		}
-
-		bool GetVertices(FCArray<NavMeshVetrex> & output) {
-			return _navMesh->GetVertices(output);
-		}
-
-		size_t GetNodesCount() {
-			return _navMesh->GetNodesCount();
-		}
-
-		size_t GetNodeVertexCount(size_t node_id) {
-			return _navMesh->GetNodeVertexCount(node_id);
-		}
-
-		bool GetNodeVertexInfo(FCArray<int> & output, size_t node_id) {
-			return _navMesh->GetNodeVertexInfo(output, node_id);
-		}
-
-		size_t GetEdgesCount() {
-			return _navMesh->GetEdgesCount();
-		}
-
-		bool GetEdges(FCArray<EdgeInfo> & output) {
-			return _navMesh->GetEdges(output);
-		}
-
-		size_t GetObstaclesCount() {
-			return _navMesh->GetObstaclesCount();
-		}
-
-		bool GetObstacles(FCArray<EdgeInfo> & output) {
-			return _navMesh->GetObstacles(output);
-		}
-
 		float CutPolygonFromMesh(FCArray<NavMeshVetrex> & polygon) {
-			auto q = _navMeshQuery.get();
-			auto nmm = NavMeshModifyer(*_navMesh, _localizer, q);
-			return nmm.CutPolygonFromMesh(polygon);
+			auto query = _navMeshQuery.get();
+			auto processor = ModificationProcessor(*_navMesh, _localizer, query);
+			PolygonPreprocessor pp(polygon);
+			auto res =  pp.performAll(processor);
+			//EdgeObstacleReplaner(*_navMesh, _localizer).Replan();
+			return res;
 		}
 
-		bool ExportNavMeshToFile(std::string file_name) {
-			return _navMesh->ExportToFile(file_name);
+		INavMeshPublic* GetPublicNavMesh() const
+		{
+			return _navMesh.get();
 		}
 
 	private:
-		std::unordered_map<size_t, std::vector<AgentSpatialInfo>> _agentsNeighbours;
+		std::unordered_map<size_t, std::vector<NeighborInfo>> _agentsNeighbours;
 		std::unique_ptr<NavMeshSpatialQuery> _navMeshQuery;
 		std::shared_ptr<NavMesh> _navMesh;
+		std::shared_ptr<NavGraph> _navGraph;
 		std::shared_ptr<NavMeshLocalizer> _localizer;
 
 		NeighborsSeeker _neighborsSeeker;
 		std::map<size_t, AgentSpatialInfo> _agentsInfo;
-		float _agentsSensitivityRadius = 1;
+		float _agentsSensitivityRadius = 6;
+		float _groupSensitivityRadius = 100;
+
+		size_t _numAgents = 0;
+		size_t _numGroups = 0;
 	};
 
-	NavSystem::NavSystem(std::shared_ptr<NavMeshLocalizer> localizer)
-		: pimpl(spimpl::make_unique_impl<NavSystemImpl>(localizer))
+	NavSystem::NavSystem()
+		: pimpl(spimpl::make_unique_impl<NavSystemImpl>())
 	{
-	}
-
-	void NavSystem::AddAgent(size_t agentId, Vector2 position)
-	{
-		pimpl->AddAgent(agentId, position);
 	}
 
 	void NavSystem::AddAgent(AgentSpatialInfo spatialInfo)
 	{
-		pimpl->AddAgent(spatialInfo);
+		pimpl->AddAgent(std::move(spatialInfo));
+	}
+
+	void NavSystem::RemoveAgent(size_t id)
+	{
+		pimpl->RemoveAgent(id);
 	}
 
 	AgentSpatialInfo & NavSystem::GetSpatialInfo(size_t agentId)
@@ -374,18 +288,9 @@ namespace FusionCrowd
 		return pimpl->GetSpatialInfo(agentId);
 	}
 
-	std::map<size_t, AgentSpatialInfo> NavSystem::GetAgentsSpatialInfos() {
-		return pimpl->GetAgentsSpatialInfos();
-	}
-
-	const std::vector<AgentSpatialInfo> NavSystem::GetNeighbours(size_t agentId) const
+	std::vector<NeighborInfo> NavSystem::GetNeighbours(size_t agentId) const
 	{
 		return pimpl->GetNeighbours(agentId);
-	}
-
-	//TEST METHOD, MUST BE DELETED
-	int NavSystem::CountNeighbors(size_t agentId) const {
-		return pimpl->CountNeighbors(agentId);
 	}
 
 	std::vector<Obstacle> NavSystem::GetClosestObstacles(size_t agentId)
@@ -398,63 +303,30 @@ namespace FusionCrowd
 		pimpl->Update(timeStep);
 	}
 
-	void NavSystem::SetAgentsSensitivityRadius(float radius) {
-		pimpl->SetAgentsSensitivityRadius(radius);
-	}
-
 	void NavSystem::Init() {
 		pimpl->Init();
 	}
 
-	void NavSystem::SetGridCoeff(float coeff) {
-		pimpl->SetGridCoeff(coeff);
+	INavMeshPublic* NavSystem::GetPublicNavMesh() const
+	{
+		return pimpl->GetPublicNavMesh();
 	}
 
-
-	//nav mesh draw export
-	size_t NavSystem::GetVertexCount() {
-		return pimpl->GetVertexCount();
-	}
-
-	bool NavSystem::GetVertices(FCArray<NavMeshVetrex> & output) {
-		return pimpl->GetVertices(output);
-	}
-
-
-	size_t NavSystem::GetNodesCount() {
-		return pimpl->GetNodesCount();
-	}
-
-	size_t NavSystem::GetNodeVertexCount(size_t node_id) {
-		return pimpl->GetNodeVertexCount(node_id);
-	}
-
-	bool NavSystem::GetNodeVertexInfo(FCArray<int> & output, size_t node_id) {
-		return pimpl->GetNodeVertexInfo(output, node_id);
-	}
-
-	size_t NavSystem::GetEdgesCount() {
-		return pimpl->GetEdgesCount();
-	}
-
-	bool NavSystem::GetEdges(FCArray<EdgeInfo> & output) {
-		return pimpl->GetEdges(output);
-	}
-
-	size_t NavSystem::GetObstaclesCount() {
-		return pimpl->GetObstaclesCount();
-	}
-
-	bool NavSystem::GetObstacles(FCArray<EdgeInfo> & output) {
-		return pimpl->GetObstacles(output);
-	}
-
-	float NavSystem::CutPolygonFromMesh(FCArray<NavMeshVetrex> & polygon) {
+	float NavSystem::CutPolygonFromMesh(FCArray<NavMeshVetrex>& polygon)
+	{
 		return pimpl->CutPolygonFromMesh(polygon);
 	}
 
-	bool NavSystem::ExportNavMeshToFile(std::string file_name) {
-		return pimpl->ExportNavMeshToFile(file_name);
+	void NavSystem::SetNavMesh(std::shared_ptr<NavMeshLocalizer> localizer)
+	{
+		pimpl->SetNavMesh(localizer);
 	}
-
+	void NavSystem::SetNavGraph(std::unique_ptr<NavGraph> navGraph)
+	{
+		pimpl->SetNavGraph(std::move(navGraph));
+	}
+	NavGraph* NavSystem::GetNavGraph()
+	{
+		return pimpl->GetNavGraph();
+	}
 }

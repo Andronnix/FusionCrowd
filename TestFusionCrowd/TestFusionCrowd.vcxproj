@@ -100,7 +100,7 @@
       <AdditionalDependencies>FusionCrowd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(ProjectDir)\Resources" "$(TargetDir)\Resources\"</Command>
+      <Command>xcopy /Y /E "$(ProjectDir)\Resources" "$(TargetDir)\Resources\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -158,28 +158,36 @@
       <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(ProjectDir)\Resources" "$(TargetDir)\Resources\"</Command>
+      <Command>xcopy /Y /E "$(ProjectDir)\Resources" "$(TargetDir)\Resources\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="NavGraph\NavGraph.h" />
+    <ClInclude Include="TestCases\Components\GoalShapeTestCase.h" />
+    <ClInclude Include="TestCases\ExchangeCircleCase.h" />
+    <ClInclude Include="TestCases\Groups\GroupMovementTestCase.h" />
+    <ClInclude Include="TestCases\Groups\GroupPerformanceTestCase.h" />
+    <ClInclude Include="TestCases\Components\NavGraphTestCase.h" />
     <ClInclude Include="TestCases\StenkaNaStenkuTestCase.h" />
-    <ClInclude Include="TestCases\FsmTestCase.h" />
+    <ClInclude Include="TestCases\Components\FsmTestCase.h" />
     <ClInclude Include="TestCases\ITestCase.h" />
     <ClInclude Include="TestCases\PinholeTestCase.h" />
     <ClInclude Include="TestCases\CrossingTestCase.h" />
     <ClInclude Include="TestCases\NeighbourSearchBenchCase.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="TestCases\Utils.h" />
-    <ClInclude Include="TestCases\ZanlungoCase.h" />
+    <ClInclude Include="TestCases\Components\ZanlungoCase.h" />
     <ClInclude Include="ThirdParty\date.h" />
     <ClInclude Include="TestCases\TshapedFancyTestCase.h" />
     <ClInclude Include="TestCases\TradeshowTestCase.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="NavGraph\NavGraph.cpp" />
+    <ClCompile Include="TestCases\Components\GoalShapeTestCase.cpp" />
+    <ClCompile Include="TestCases\ExchangeCircleCase.cpp" />
+    <ClCompile Include="TestCases\Groups\GroupMovementTestCase.cpp" />
+    <ClCompile Include="TestCases\Groups\GroupPerformanceTestCase.cpp" />
+    <ClCompile Include="TestCases\Components\NavGraphTestCase.cpp" />
     <ClCompile Include="TestCases\StenkaNaStenkuTestCase.cpp" />
-    <ClCompile Include="TestCases\FsmTestCase.cpp" />
+    <ClCompile Include="TestCases\Components\FsmTestCase.cpp" />
     <ClCompile Include="TestCases\PinholeTestCase.cpp" />
     <ClCompile Include="TestCases\CrossingTestCase.cpp" />
     <ClCompile Include="TestCases\NeighbourSearchBenchCase.cpp" />
@@ -189,7 +197,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="TestCases\ZanlungoCase.cpp" />
+    <ClCompile Include="TestCases\Components\ZanlungoCase.cpp" />
     <ClCompile Include="TestFusionCrowd.cpp" />
     <ClCompile Include="TestCases\TshapedFancyTestCase.cpp" />
     <ClCompile Include="TestCases\TradeshowTestCase.cpp" />
@@ -202,6 +210,18 @@
     </None>
     <None Include="Resources\graph.nav">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </None>
+    <None Include="Resources\graph\circle.navgraph">
+      <DeploymentContent>true</DeploymentContent>
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Resources\graph\randomgrid.navgraph">
+      <DeploymentContent>true</DeploymentContent>
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Resources\graph\twocycles.navgraph">
+      <DeploymentContent>true</DeploymentContent>
+      <FileType>Document</FileType>
     </None>
     <None Include="Resources\pinhole.nav">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>

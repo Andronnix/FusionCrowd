@@ -6,6 +6,7 @@
 
 #include "Export/FCArray.h"
 #include "Export/Export.h"
+#include "Export/INavMeshPublic.h"
 #include "NavMeshEdge.h"
 #include "NavMeshObstacle.h"
 #include "NavMeshNode.h"
@@ -19,7 +20,9 @@ namespace FusionCrowd
 	class NavMeshEdge;
 	class NavMeshLocalizer;
 	class PathPlanner;
-	class NavMeshModifyer;
+	class ModificationProcessor;
+	class NavMeshModification;
+	class EdgeObstacleReplaner;
 
 	class NMNodeGroup
 	{
@@ -42,7 +45,7 @@ namespace FusionCrowd
 		size_t _last;
 	};
 
-	class NavMesh
+	class NavMesh : public INavMeshPublic
 	{
 	public:
 		NavMesh();
@@ -70,7 +73,11 @@ namespace FusionCrowd
 		inline size_t getNodeCount() const { return nCount; }
 		const NMNodeGroup* getNodeGroup(const std::string& grpName) const;
 
-		//nav mesh draw export
+		size_t GetVersion() const;
+		void IncVersion();
+
+	public:
+		// INavMeshPublicAPI
 		size_t GetVertexCount();
 		bool GetVertices(FCArray<NavMeshVetrex> & output);
 		size_t GetNodesCount();
@@ -80,7 +87,7 @@ namespace FusionCrowd
 		bool GetEdges(FCArray<EdgeInfo> & output);
 		size_t GetObstaclesCount();
 		bool GetObstacles(FCArray<EdgeInfo> & output);
-		bool ExportToFile(std::string file_name);
+		bool ExportNavMeshToFile(char* file_name) override;
 
 	protected:
 		void CheckObstaclesDirection();
@@ -97,6 +104,11 @@ namespace FusionCrowd
 		NavMeshNode* nodes;
 		std::map<const std::string, NMNodeGroup> nodeGroups;
 
-		friend NavMeshModifyer;
+		friend ModificationProcessor;
+		friend NavMeshModification;
+		friend EdgeObstacleReplaner;
+
+	private:
+		size_t _version = 0;
 	};
 }
