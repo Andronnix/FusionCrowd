@@ -23,6 +23,8 @@
 
 #include "StrategyComponent/FSM/FsmStartegy.h"
 
+#include "Util/RecordingSerializer.h"
+
 using namespace DirectX::SimpleMath;
 
 namespace FusionCrowd
@@ -197,6 +199,14 @@ namespace FusionCrowd
 		size_t GetGroupDummyAgent(size_t groupId)
 		{
 			return _sim->GetGroup(groupId)->GetDummyId();
+		}
+
+		void SerializeRecordingToFile(const char * path, size_t pathLen) const
+		{
+			std::string file(path, pathLen);
+			auto & rec = _sim->GetRecording();
+
+			Recordings::Serialize(rec, file);
 		}
 
 	private:

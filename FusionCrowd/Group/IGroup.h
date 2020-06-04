@@ -16,16 +16,17 @@ namespace FusionCrowd
 	protected:
 		IGroup(size_t id, size_t dummyId);
 
+		virtual DirectX::SimpleMath::Vector2 GetRelativePos(size_t agentId) const = 0;
+
 	public:
 		virtual size_t GetSize() const = 0;
 		virtual bool Contains(size_t agentId) const = 0;
 		virtual void AddAgent(size_t agentId, AgentSpatialInfo& info) = 0;
 		virtual void RemoveAgent(size_t agentId) = 0;
 		virtual std::vector<size_t> GetAgents() const = 0;
-		virtual DirectX::SimpleMath::Vector2 GetRelativePos(size_t agentId) const = 0;
 		virtual float GetRadius() const = 0;
 
-		void SetAgentPrefVelocity(const AgentSpatialInfo & dummyInfo, AgentSpatialInfo & agentInfo, float timeStep) const;
+		virtual void SetAgentPrefVelocity(const AgentSpatialInfo & dummyInfo, AgentSpatialInfo & agentInfo, float timeStep) const;
 
 		size_t GetDummyId() const;
 		size_t GetId() const;

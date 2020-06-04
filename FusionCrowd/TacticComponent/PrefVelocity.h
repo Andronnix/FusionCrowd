@@ -31,7 +31,9 @@ namespace FusionCrowd
 
 			inline void setSingle(const DirectX::SimpleMath::Vector2& dir)
 			{
-				_left = _preferred = _right = dir;
+				DirectX::SimpleMath::Vector2 r;
+				dir.Normalize(r);
+				_left = _preferred = _right = r;
 			}
 
 			inline DirectX::SimpleMath::Vector2 getTarget() const { return _target; }

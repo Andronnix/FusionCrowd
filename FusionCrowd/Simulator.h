@@ -6,7 +6,7 @@
 #include "Agent.h"
 
 #include "Export/ComponentId.h"
-#include "Export/Export.h"
+//#include "Export/Export.h"
 #include "Export/FCArray.h"
 #include "Export/IStrategyComponent.h"
 
@@ -14,6 +14,7 @@
 #include "TacticComponent/ITacticComponent.h"
 #include "OperationComponent/IOperationComponent.h"
 #include "Navigation/NavSystem.h"
+#include "Navigation/OnlineRecording/OnlineRecording.h"
 
 #include "Util/spimpl.h"
 #include "Math/Util.h"
@@ -47,7 +48,7 @@ namespace FusionCrowd
 
 		AgentSpatialInfo & GetSpatialInfo(size_t agentId);
 
-		IRecording & GetRecording();
+		OnlineRecording & GetRecording();
 		void SetIsRecording(bool isRecording);
 
 		float GetElapsedTime();

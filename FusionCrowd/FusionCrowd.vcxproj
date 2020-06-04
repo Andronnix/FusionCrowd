@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="Agent.h" />
     <ClInclude Include="AgentShape\Ellipse.h" />
+    <ClInclude Include="Export\AgentInfo.h" />
     <ClInclude Include="Export\IExternalControlInterface.h" />
     <ClInclude Include="Export\Math\Shapes.h" />
     <ClInclude Include="Group\GuidedGroup.h" />
@@ -29,6 +30,7 @@
     <ClInclude Include="Math\Shapes\PointShape.h" />
     <ClInclude Include="Math\Shapes\RectShape.h" />
     <ClInclude Include="Navigation\NeighborInfo.h" />
+    <ClInclude Include="Group\PotentialTouristGroup.h" />
     <ClInclude Include="TacticComponent\ExternalControl.h" />
     <ClInclude Include="Navigation\NavMesh\Modification\EdgeObstacleReplaner.h" />
     <ClInclude Include="Export\ComponentId.h" />
@@ -61,6 +63,7 @@
     <ClInclude Include="StrategyComponent\FSM\FsmStartegy.h" />
     <ClInclude Include="TacticComponent\NavGraph\NavGraphComponent.h" />
     <ClInclude Include="Util\ctpl_stl.h" />
+    <ClInclude Include="Util\ExportConverter.h" />
     <ClInclude Include="Util\RecordingSerializer.h" />
     <ClInclude Include="Export\FCArray.h" />
     <ClInclude Include="Math\Util.h" />
@@ -117,6 +120,7 @@
     <ClCompile Include="Math\Shapes\RectShape.cpp" />
     <ClCompile Include="Navigation\AgentSpatialInfo.cpp" />
     <ClCompile Include="Navigation\NeighborInfo.cpp" />
+    <ClCompile Include="Group\PotentialTouristGroup.cpp" />
     <ClCompile Include="TacticComponent\ExternalControl.cpp" />
     <ClCompile Include="Navigation\NavMesh\Modification\EdgeObstacleReplaner.cpp" />
     <ClCompile Include="Export\Export.cpp" />
@@ -146,6 +150,7 @@
     <ClCompile Include="OperationComponent\ZanlungoComponent.cpp" />
     <ClCompile Include="StrategyComponent\FSM\FsmStrategy.cpp" />
     <ClCompile Include="TacticComponent\NavGraph\NavGraphComponent.cpp" />
+    <ClCompile Include="Util\ExportConverter.cpp" />
     <ClCompile Include="Util\RecordingSerializer.cpp" />
     <ClCompile Include="Simulator.cpp" />
     <ClCompile Include="Agent.cpp" />

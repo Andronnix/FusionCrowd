@@ -68,6 +68,7 @@ namespace TestFusionCrowd
 		std::unique_ptr<ISimulatorBuilder, decltype(&BuilderDeleter)> builder(BuildSimulator(), BuilderDeleter);
 		builder
 			->WithNavGraph("Resources/graph/twocycles.navgraph")
+			->WithNavMesh("Resources/square.nav")
 			->WithOp(ComponentIds::ORCA_ID)
 		    ->WithStrategy(ComponentIds::FSM_ID);
 

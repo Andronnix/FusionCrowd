@@ -14,9 +14,8 @@ namespace FusionCrowd
 			const char SEP = ',';
 		}
 
-		void Serialize(IRecording const &  rec, char const * destFilePath, size_t pathLen)
+		void Serialize(const OnlineRecording & rec, const std::string filename)
 		{
-			std::string filename(destFilePath, pathLen);
 			std::ofstream trajs(filename);
 
 			size_t slicesCount = rec.GetSlicesCount();

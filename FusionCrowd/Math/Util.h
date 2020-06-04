@@ -9,6 +9,16 @@ namespace FusionCrowd
 {
 	namespace Math
 	{
+		inline float orientToRad(const DirectX::SimpleMath::Vector2 & orient)
+		{
+			if(orient.LengthSquared() < 0.0001f)
+			{
+				return 0;
+			}
+
+			return atan2f(orient.y, orient.x);
+		}
+
 		inline float det(const DirectX::SimpleMath::Vector2 & v1,
 	             const DirectX::SimpleMath::Vector2 & v2)
 		{

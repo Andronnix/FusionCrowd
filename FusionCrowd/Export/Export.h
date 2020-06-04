@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Export/AgentInfo.h"
 #include "Export/FCArray.h"
 #include "Export/IRecording.h"
 #include "Export/IStrategyComponent.h"
@@ -17,22 +18,6 @@ namespace FusionCrowd
 
 	extern "C"
 	{
-		struct FUSION_CROWD_API AgentInfo
-		{
-			size_t id;
-
-			float posX, posY;
-			float velX, velY;
-			float orientX, orientY;
-			float radius;
-
-			ComponentId opCompId;
-			ComponentId tacticCompId;
-			ComponentId stratCompId;
-
-			float goalX, goalY;
-		};
-
 		struct FUSION_CROWD_API AgentParams
 		{
 			size_t id;
@@ -109,6 +94,8 @@ namespace FusionCrowd
 
 			virtual INavMeshPublic* GetNavMesh() const = 0;
 			virtual INavSystemPublic* GetNavSystem() const = 0;
+
+			virtual void SerializeRecordingToFile(const char * path, size_t pathLen) const = 0;
 		};
 
 		/*

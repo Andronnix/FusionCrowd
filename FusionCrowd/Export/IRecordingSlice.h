@@ -1,13 +1,11 @@
 #pragma once
 
+#include "Export/AgentInfo.h"
 #include "Export/Config.h"
 #include "Export/FCArray.h"
-#include "Export.h"
 
 namespace FusionCrowd
 {
-	struct AgentInfo;
-
 	extern "C"
 	{
 		class FUSION_CROWD_API IRecordingSlice

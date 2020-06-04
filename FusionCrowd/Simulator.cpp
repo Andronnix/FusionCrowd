@@ -9,9 +9,11 @@
 #include "Navigation/OnlineRecording/OnlineRecording.h"
 #include "Group/GridGroup.h"
 #include "Group/GuidedGroup.h"
+#include "Group/PotentialTouristGroup.h"
 #include "Math/Shapes/ConeShape.h"
 #include "Math/Shapes/DiskShape.h"
 #include "Math/consts.h"
+#include "Util/ExportConverter.h"
 
 #include <random>
 
@@ -52,9 +54,27 @@ namespace FusionCrowd
 			}
 
 			_navSystem->Update(timeStep);
-			if (_isRecording) _recording.MakeRecord(GetAgentsInfo(), timeStep);
+
+			if (_isRecording) {
+				MakeRecord(timeStep);
+			}
+
 
 			return true;
+		}
+
+		void MakeRecord(float timeStep)
+		{
+			std::vector<AgentInfo> infos;
+
+			for(auto a = _agents.begin(); a != _agents.end(); a++)
+			{
+				AgentSpatialInfo & spatial = _navSystem->GetSpatialInfo(a->first);
+				AgentInfo info = fromSpatialInfo(spatial, a->second);
+				infos.push_back(info);
+			}
+
+			_recording.MakeRecord(std::move(infos), timeStep);
 		}
 
 		size_t GetAgentCount() const { return _agents.size(); }
@@ -63,7 +83,7 @@ namespace FusionCrowd
 			return _navSystem->GetSpatialInfo(agentId);
 		}
 
-		IRecording & GetRecording() {
+		OnlineRecording & GetRecording() {
 			return _recording;
 		}
 
@@ -438,7 +458,7 @@ namespace FusionCrowd
 
 			size_t dummyId = AddAgent(std::move(dummyInfo), GetAnyOperational(), GetAnyTactic(), ComponentIds::NO_COMPONENT);
 
-			_groups[grpId] = std::make_unique<GuidedGroup>(grpId, dummyId, leaderInfo);
+			_groups[grpId] = std::make_unique<PotentialTouristGroup>(grpId, dummyId, leaderInfo);
 
 			AddAgentToGroup(leaderId, grpId);
 
@@ -595,7 +615,7 @@ namespace FusionCrowd
 		return pimpl->GetSpatialInfo(agentId);
 	}
 
-	IRecording & Simulator::GetRecording() {
+	OnlineRecording & Simulator::GetRecording() {
 		return pimpl->GetRecording();
 	}
 

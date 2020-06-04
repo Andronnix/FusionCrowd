@@ -102,8 +102,7 @@ void WriteToFile(std::shared_ptr<ITestCase> testCase, std::vector<long long> mea
 		std::cout << "  2. Writing trajectories" << std::endl;
 
 		std::string filename(prefix + "_trajs.csv");
-		auto & rec = testCase->GetSim()->GetRecording();
-		FusionCrowd::Recordings::Serialize(rec, filename.c_str(), filename.size());
+		testCase->GetSim()->SerializeRecordingToFile(filename.c_str(), filename.size());
 	}
 }
 
@@ -119,10 +118,10 @@ int main()
 		// std::shared_ptr<ITestCase>((ITestCase*) new TshapedFancyTestCase(FusionCrowd::ComponentIds::ORCA_ID, 4, 1000, true)),
 		// std::shared_ptr<ITestCase>((ITestCase*) new NavGraphTestCase(100, 1000, true)),
 		// std::shared_ptr<ITestCase>((ITestCase*) new StenkaNaStenkuTestCase(500, 1000, true)),
-		// std::shared_ptr<ITestCase>((ITestCase*) new GroupMovementTestCase(1000, true)),
+		std::shared_ptr<ITestCase>((ITestCase*) new GroupMovementTestCase(1000, true)),
 		// std::shared_ptr<ITestCase>((ITestCase*) new ExchangeCircleCase(7500, 1000, FusionCrowd::ComponentIds::ORCA_ID, false)),
 		// std::shared_ptr<ITestCase>((ITestCase*) new GroupPerformanceTestCase()),
-		std::shared_ptr<ITestCase>((ITestCase*) new GoalShapeTestCase())
+		// std::shared_ptr<ITestCase>((ITestCase*) new GoalShapeTestCase())
 	};
 
 	std::vector<long long> measurements;

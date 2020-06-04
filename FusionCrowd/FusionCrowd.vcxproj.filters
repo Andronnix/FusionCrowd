@@ -64,6 +64,8 @@
     <ClCompile Include="Math\Shapes\DiskShape.cpp" />
     <ClCompile Include="Math\Shapes\ConeShape.cpp" />
     <ClCompile Include="Math\Shapes\RectShape.cpp" />
+    <ClCompile Include="Group\PotentialTouristGroup.cpp" />
+    <ClCompile Include="Util\ExportConverter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Agent.h" />
@@ -153,6 +155,9 @@
     <ClInclude Include="Math\Shapes\DiskShape.h" />
     <ClInclude Include="Math\Shapes\ConeShape.h" />
     <ClInclude Include="Math\Shapes\RectShape.h" />
+    <ClInclude Include="Group\PotentialTouristGroup.h" />
+    <ClInclude Include="Export\AgentInfo.h" />
+    <ClInclude Include="Util\ExportConverter.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

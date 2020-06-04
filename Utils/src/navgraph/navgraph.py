@@ -1,6 +1,5 @@
 from collections import namedtuple
 from typing import Dict
-from tkinter import *
 from scanner import Scanner
 
 
