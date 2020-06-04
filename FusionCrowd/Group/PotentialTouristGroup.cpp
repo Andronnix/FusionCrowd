@@ -16,11 +16,13 @@ namespace FusionCrowd
 		return _agents.size() + 1;
 	}
 
-	bool PotentialTouristGroup::Contains(size_t agentId) const {
+	bool PotentialTouristGroup::Contains(size_t agentId) const
+	{
 		return _leaderId == agentId || _agents.find(agentId) != _agents.end();
 	}
 
-	void PotentialTouristGroup::AddAgent(size_t agentId, AgentSpatialInfo& info) {
+	void PotentialTouristGroup::AddAgent(size_t agentId, AgentSpatialInfo& info)
+	{
 		if(Contains(agentId))
 			return;
 
@@ -83,6 +85,8 @@ namespace FusionCrowd
 
 	Vector2 PotentialTouristGroup::GetRelativePos(size_t agentId) const
 	{
+		assert(false && "This should never be called.");
+
 		return Vector2();
 	}
 }
