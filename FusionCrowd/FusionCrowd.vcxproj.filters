@@ -162,6 +162,7 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="navgraph.spec" />
+    <None Include="navmesh.spec" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Navigation\FastFixedRadiusNearestNeighbors\NeighborsSeeker.hlsl" />
