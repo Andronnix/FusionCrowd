@@ -23,6 +23,8 @@
 
 #include "TestCases/Groups/GroupMovementTestCase.h"
 #include "TestCases/Groups/GroupPerformanceTestCase.h"
+#include "TestCases/Groups/CorridorTestCase.h"
+
 
 #include "Export/ComponentId.h"
 #include "Export/Export.h"
@@ -118,10 +120,11 @@ int main()
 		// std::shared_ptr<ITestCase>((ITestCase*) new TshapedFancyTestCase(FusionCrowd::ComponentIds::ORCA_ID, 4, 1000, true)),
 		// std::shared_ptr<ITestCase>((ITestCase*) new NavGraphTestCase(100, 1000, true)),
 		// std::shared_ptr<ITestCase>((ITestCase*) new StenkaNaStenkuTestCase(500, 1000, true)),
-		std::shared_ptr<ITestCase>((ITestCase*) new GroupMovementTestCase(1000, true)),
+		// std::shared_ptr<ITestCase>((ITestCase*) new GroupMovementTestCase(1000, true)),
 		// std::shared_ptr<ITestCase>((ITestCase*) new ExchangeCircleCase(7500, 1000, FusionCrowd::ComponentIds::ORCA_ID, false)),
 		// std::shared_ptr<ITestCase>((ITestCase*) new GroupPerformanceTestCase()),
 		// std::shared_ptr<ITestCase>((ITestCase*) new GoalShapeTestCase())
+		std::shared_ptr<ITestCase>((ITestCase*) new CorridorTestCase(2, 500)),
 	};
 
 	std::vector<long long> measurements;

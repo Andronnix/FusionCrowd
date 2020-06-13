@@ -66,6 +66,9 @@
     <ClInclude Include="TestCases\Components\GoalShapeTestCase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TestCases\Groups\CorridorTestCase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -113,6 +116,9 @@
     <ClCompile Include="TestCases\Components\GoalShapeTestCase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TestCases\Groups\CorridorTestCase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\simple.nav">
@@ -131,5 +137,6 @@
     <None Include="Resources\graph\randomgrid.navgraph" />
     <None Include="Resources\graph\twocycles.navgraph" />
     <None Include="Resources\graph\circle.navgraph" />
+    <None Include="Resources\corridor_20x3.nav" />
   </ItemGroup>
 </Project>
