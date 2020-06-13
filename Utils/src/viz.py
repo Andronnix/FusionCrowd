@@ -66,7 +66,7 @@ def draw_trajectories(canvas: Player, tr):
         canvas.polyline(ps, color)
 
 
-def redraw_positions(canvas: Player, tr, frame, size=1.0, ovals=None,orint=None):
+def redraw_positions(canvas: Player, tr, frame, ovals=None,orint=None):
     if ovals is None:
         ovals = dict()
     if orint is None:
@@ -189,17 +189,15 @@ if __name__ == "__main__":
     parser.add_argument("source_file")
     parser.add_argument("--navmesh", default=None)
     parser.add_argument("--navgraph", default=None)
-    parser.add_argument("--scale", default=1)
-    parser.add_argument("--agent-size", default=1)
+    parser.add_argument("--scale", default=20)
     parser.add_argument("--hide-trajectory", action='store_true')
     parser.add_argument("--hide-orientation", action='store_true')
     parser.add_argument("--show-mesh-text", action='store_true')
 
     args = parser.parse_args()
     scale = float(args.scale)
-    agent_size = float(args.agent_size)
     hide_trajectory = args.hide_trajectory
-    hide_orientation= args.hide_orientation
+    hide_orientation = args.hide_orientation
 
     tr = read_trajectories(args.source_file)
 
@@ -216,8 +214,8 @@ if __name__ == "__main__":
     if not hide_trajectory:
         draw_trajectories(canvas, tr)
 
-    result_redraw= redraw_positions(canvas, tr=tr, size=agent_size, frame=0)
+    result_redraw = redraw_positions(canvas, tr=tr, frame=0)
     ovals, orient = result_redraw
-    canvas.set_redraw(lambda new_frame: redraw_positions(canvas, tr=tr, frame=int(new_frame), size=agent_size, ovals=ovals, orint=orient))
+    canvas.set_redraw(lambda new_frame: redraw_positions(canvas, tr=tr, frame=int(new_frame), ovals=ovals, orint=orient))
 
     canvas.main_loop()
