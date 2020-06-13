@@ -9,12 +9,14 @@
 //#include "Export/Export.h"
 #include "Export/FCArray.h"
 #include "Export/IStrategyComponent.h"
+#include "Export/AgentInfo.h"
 
 #include "StrategyComponent/Goal/Goal.h"
 #include "TacticComponent/ITacticComponent.h"
 #include "OperationComponent/IOperationComponent.h"
 #include "Navigation/NavSystem.h"
 #include "Navigation/OnlineRecording/OnlineRecording.h"
+#include "Navigation/AgentSpatialInfo.h"
 
 #include "Util/spimpl.h"
 #include "Math/Util.h"

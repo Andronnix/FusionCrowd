@@ -24,6 +24,7 @@ namespace FusionCrowd
 
 		return AgentInfo {
 			agent.id,
+			(info.type == AgentSpatialInfo::AGENT ? AgentType::Agent : AgentType::Group),
 			info.GetPos().x, info.GetPos().y,
 			info.GetVel().x, info.GetVel().y,
 			info.GetOrient().x, info.GetOrient().y,

@@ -7,13 +7,14 @@ namespace FusionCrowd
 {
 	extern "C"
 	{
+		enum class FUSION_CROWD_API AgentType {
+			Agent, Group
+		};
+
 		struct FUSION_CROWD_API AgentInfo
 		{
-			enum FUSION_CROWD_API Type {
-				Agent, Group
-			};
-
 			size_t id;
+			AgentType type;
 
 			float posX, posY;
 			float velX, velY;

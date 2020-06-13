@@ -13,7 +13,7 @@
 namespace FusionCrowd
 {
 	class Simulator;
-	class AgentSpatialInfo;
+	struct AgentSpatialInfo;
 
 	class NavMeshComponent : public ITacticComponent
 	{

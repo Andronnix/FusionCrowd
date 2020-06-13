@@ -384,15 +384,7 @@ namespace FusionCrowd
 					strat = agent.stratComponent.lock()->GetId();
 				}
 
-				output[i] = AgentInfo {
-					agent.id,
-					info.GetPos().x, info.GetPos().y,
-					info.GetVel().x, info.GetVel().y,
-					info.GetOrient().x, info.GetOrient().y,
-					info.radius,
-					op, tactic, strat,
-					g.getCentroid().x, g.getCentroid().y
-				};
+				output[i] = fromSpatialInfo(info, agent);
 				i++;
 			}
 

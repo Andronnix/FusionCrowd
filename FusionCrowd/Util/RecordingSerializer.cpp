@@ -34,7 +34,7 @@ namespace FusionCrowd
 				for(size_t id : ids)
 				{
 					auto info = slice.GetAgentInfo(id);
-					trajs << SEP << id << SEP
+					trajs << SEP << id << SEP << (info.type == AgentType::Agent ? 'A' : 'G') << SEP
 					      << info.posX << SEP << info.posY << SEP
 					      << info.orientX << SEP << info.orientY << SEP
 					      << info.radius;
