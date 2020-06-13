@@ -61,8 +61,9 @@ def read_trajectories(filename):
 def draw_trajectories(canvas: Player, tr):
     for id, agent_infos in tr.pos.items():
         color = all_colors[id % len(all_colors)]
-        for a1, a2 in pairwise(agent_infos.values()):
-            canvas.line(a1.pos, a2.pos, color)
+        ps = map(lambda a: a.pos, agent_infos.values())
+
+        canvas.polyline(ps, color)
 
 
 def redraw_positions(canvas: Player, tr, frame, size=1.0, ovals=None,orint=None):

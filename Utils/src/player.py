@@ -136,6 +136,7 @@ class Player:
         rx, ry = (cur[2] - cur[0]) / 2, (cur[3] - cur[1]) / 2
 
         self.canvas.coords(item, x - rx, y - ry, x + rx, y + ry)
+        self.canvas.update_idletasks()
 
     def line(self, p1, p2, color="white", **kwargs):
         sp1 = p1[0] * self.scale, p1[1] * self.scale
@@ -144,6 +145,14 @@ class Player:
         result = self.canvas.create_line(*sp1, *sp2, fill=color, **kwargs)
 
         return result
+
+    def polyline(self, ps, color="white", **kwargs):
+        scaled = []
+        for p in ps:
+            scaled.append(p[0] * self.scale)
+            scaled.append(p[1] * self.scale)
+
+        return self.canvas.create_line(*scaled, fill=color, **kwargs)
 
     def circle(self, p, R, fill="white", outline="white"):
         x, y = p[0] * self.scale, p[1] * self.scale
@@ -157,20 +166,11 @@ class Player:
         pos = target.pos[0] * self.scale, target.pos[1] * self.scale
 
         self.canvas.coords(item, *pos, *pos1)
+        self.canvas.update_idletasks()
 
     def orientation(self, agt, color="white"):
         pos1 = agt.pos[0] + agt.orient[0] * agt.R, agt.pos[1] + agt.orient[1] * agt.R
         return self.line(agt.pos, pos1, color)
 
     def vector(self, p1, p2, color="white"):
-        self.line(p1, p2, color)
-
-        p09 = p1[0] + (p2[0] - p1[0]) * 0.9, p1[1] + (p2[1] - p1[1]) * 0.9
-        orto01 = -(p2[1] - p1[1]) * 0.05, (p2[0] - p1[0]) * 0.05
-
-        left_wing = p09[0] + orto01[0], p09[1] + orto01[1]
-        right_wing = p09[0] - orto01[0], p09[1] - orto01[1]
-
-        self.line(left_wing,  p2, color)
-        self.line(right_wing, p2, color)
-        self.line(right_wing, left_wing, color)
+        self.line(p1, p2, color, arrow=tk.LAST, width=2)
