@@ -421,9 +421,9 @@ namespace FusionCrowd
 			AgentSpatialInfo dummyInfo;
 			dummyInfo.collisionsLevel = AgentSpatialInfo::GROUP;
 			dummyInfo.type = AgentSpatialInfo::GROUP;
-			dummyInfo.maxSpeed = .5f;
-			dummyInfo.prefSpeed = .5f;
-			dummyInfo.maxAngVel /= 4.f;
+			dummyInfo.maxSpeed *= .85f;
+			dummyInfo.prefSpeed *= .85f;
+			dummyInfo.maxAngVel /= 6.f;
 			dummyInfo.inertiaEnabled = true;
 			dummyInfo.neighbourSearchShape = std::make_unique<Math::DiskShape>(Vector2(), 50);
 			dummyInfo.SetPos(origin);

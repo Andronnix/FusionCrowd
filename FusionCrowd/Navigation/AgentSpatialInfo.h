@@ -34,7 +34,7 @@ namespace FusionCrowd
 		float prefSpeed = 1.04f;
 		float maxAngVel = 2 * Math::TWOPI;
 
-		bool inertiaEnabled = true;
+		bool inertiaEnabled = false;
 
 		Type type = AGENT;
 		Type collisionsLevel = COLLIDE_ALL;
