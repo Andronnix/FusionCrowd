@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Math/Shapes/Geometry2D.h"
+#include "Math/consts.h"
+
 #include "TacticComponent/PrefVelocity.h"
 #include "Export/IRecording.h"
 #include "Export/Export.h"
@@ -30,7 +32,7 @@ namespace FusionCrowd
 		float maxSpeed  = 2.f;
 		float maxAccel  = 0.5f;
 		float prefSpeed = 1.04f;
-		float maxAngVel = 1.0f;
+		float maxAngVel = 2 * Math::TWOPI;
 
 		bool inertiaEnabled = true;
 

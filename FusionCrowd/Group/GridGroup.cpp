@@ -25,6 +25,7 @@ namespace FusionCrowd
 		}
 
 		_agents.push_back(agentId);
+		info.inertiaEnabled = false;
 
 		if(info.radius * 2 > _agentSize)
 			_agentSize = info.radius * 2;

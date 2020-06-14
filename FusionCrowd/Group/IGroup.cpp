@@ -11,12 +11,15 @@ namespace FusionCrowd
 		const float rot = atan2f(dummyInfo.GetOrient().y, dummyInfo.GetOrient().x);
 		const Vector2 relativePos = GetRelativePos(agentInfo.id);
 		const Vector2 rotRelativePos = Math::rotate(relativePos, rot);
-		const Vector2 targetPos = dummyInfo.GetPos() + dummyInfo.GetVel() * timeStep + rotRelativePos;
+		const Vector2 targetPos = dummyInfo.GetPos() + rotRelativePos + dummyInfo.velNew * timeStep;
+
 		Vector2 dir = targetPos - agentInfo.GetPos();
 
-		agentInfo.prefVelocity.setSpeed(dir.Length() / timeStep);
+		float speed = dir.Length() / timeStep;
+		if(speed > agentInfo.maxSpeed)
+			speed = agentInfo.maxSpeed;
 
-		dir.Normalize();
+		agentInfo.prefVelocity.setSpeed(speed);
 		agentInfo.prefVelocity.setSingle(dir);
 	}
 

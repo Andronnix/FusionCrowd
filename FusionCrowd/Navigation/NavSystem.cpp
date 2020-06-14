@@ -118,7 +118,7 @@ namespace FusionCrowd
 
 				Vector2 newPos, newVel, newOrient;
 				UpdatePos(currentInfo, timeStep, newPos, newVel);
-				UpdateOrient(currentInfo, timeStep, newOrient);
+				UpdateOrient(currentInfo, timeStep, newVel, newOrient);
 
 				currentInfo.Update(newPos, newVel, newOrient);
 			}
@@ -148,33 +148,28 @@ namespace FusionCrowd
 				updatedVel = agent.velNew;
 			}
 
-			updatedPos = agent.GetPos() + agent.GetVel() * timeStep;
+			updatedPos = agent.GetPos() + updatedVel * timeStep;
 			updatedPos = _localizer->GetClosestAvailablePoint(updatedPos);
 		}
 
-		void UpdateOrient(const AgentSpatialInfo & agent, float timeStep, Vector2 & newOrient)
+		void UpdateOrient(const AgentSpatialInfo & agent, float timeStep, const Vector2 & newVel, Vector2 & newOrient)
 		{
-			float speed = agent.GetVel().Length();
+			float speed = newVel.Length();
 			if(speed < Math::EPS)
 			{
-				newOrient = Vector2(0, 1);
+				newOrient = agent.GetOrient();
 				return;
 			}
 
 			if(!agent.inertiaEnabled)
 			{
-				agent.GetVel().Normalize(newOrient);
+				newVel.Normalize(newOrient);
 				return;
 			}
 
-			if (abs(speed) <= Math::EPS)
-			{
-				speed = speed < 0 ? -Math::EPS : Math::EPS;
-			}
+			const float speedThresh = agent.prefSpeed;
 
-			const float speedThresh = agent.prefSpeed / 3.f;
-
-			Vector2 moveDir = agent.GetVel() / speed;
+			Vector2 moveDir = newVel / speed;
 			if (speed >= speedThresh)
 			{
 				newOrient = moveDir;
@@ -184,7 +179,7 @@ namespace FusionCrowd
 				float frac = sqrtf(speed / speedThresh);
 				Vector2 prefDir = agent.prefVelocity.getPreferred();
 				// prefDir *can* be zero if we've arrived at goal.  Only use it if it's non-zero.
-				if (prefDir.LengthSquared() > 0.000001f)
+				if (prefDir.LengthSquared() > Math::EPS * Math::EPS)
 				{
 					newOrient = frac * moveDir + (1.f - frac) * prefDir;
 					newOrient.Normalize();

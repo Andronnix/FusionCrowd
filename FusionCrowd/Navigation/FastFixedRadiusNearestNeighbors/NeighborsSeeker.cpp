@@ -91,6 +91,7 @@ namespace FusionCrowd
 				const SearchRequest& r = reqs.at(reqIdx);
 				SearchResult result;
 				result.agentId = r.id;
+				result.isOverlapped = false;
 
 				const float R = r.neighbourSearchShape->BoundingRadius();
 				const Vector2 pos = r.GetPos();
@@ -111,7 +112,12 @@ namespace FusionCrowd
 
 						for(auto & n : cell->second)
 						{
-							if(r.CanCollide(n) && r.neighbourSearchShape->containsPoint(n.GetPos() - pos))
+							if(n.id == result.agentId || !r.CanCollide(n))
+							{
+								continue;
+							}
+
+							if(r.neighbourSearchShape->containsPoint(n.GetPos() - pos))
 							{
 								result.neighbors.push_back(NeighborInfo(n));
 							}

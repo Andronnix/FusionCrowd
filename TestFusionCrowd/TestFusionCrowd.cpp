@@ -124,7 +124,7 @@ int main()
 		// std::shared_ptr<ITestCase>((ITestCase*) new ExchangeCircleCase(7500, 1000, FusionCrowd::ComponentIds::ORCA_ID, false)),
 		// std::shared_ptr<ITestCase>((ITestCase*) new GroupPerformanceTestCase()),
 		// std::shared_ptr<ITestCase>((ITestCase*) new GoalShapeTestCase())
-		std::shared_ptr<ITestCase>((ITestCase*) new CorridorTestCase(2, 500)),
+		std::shared_ptr<ITestCase>((ITestCase*) new CorridorTestCase(5, 500)),
 	};
 
 	std::vector<long long> measurements;
