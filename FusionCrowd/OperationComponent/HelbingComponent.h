@@ -10,6 +10,9 @@
 #include "Navigation/AgentSpatialInfo.h"
 
 #include <map>
+#include <unordered_map>
+
+#include <random>
 
 namespace FusionCrowd
 {
@@ -32,7 +35,6 @@ namespace FusionCrowd
 		public:
 			HelbingComponent(std::shared_ptr<NavSystem> navSystem);
 			HelbingComponent(std::shared_ptr<NavSystem> navSystem, float AGENT_SCALE, float OBST_SCALE, float REACTION_TIME, float BODY_FORCE, float FRICTION, float FORCE_DISTANCE);
-			~HelbingComponent();
 
 			ComponentId GetId() override { return ComponentIds::HELBING_ID; };
 
@@ -44,13 +46,19 @@ namespace FusionCrowd
 
 		private:
 			void ComputeNewVelocity(AgentSpatialInfo & agent, float timeStep);
-			DirectX::SimpleMath::Vector2 AgentForce(AgentSpatialInfo* agent, NeighborInfo * other) const;
+			DirectX::SimpleMath::Vector2 AgentForce(AgentSpatialInfo* agent, NeighborInfo * other);
 			DirectX::SimpleMath::Vector2 ObstacleForce(AgentSpatialInfo* agent, Obstacle * obst) const;
 			DirectX::SimpleMath::Vector2 DrivingForce(AgentSpatialInfo* agent);
+
+			float GetPriority(size_t agentId);
 
 
 			std::shared_ptr<NavSystem> _navSystem;
 			std::map<int, AgentParamentrs> _agents;
+
+			std::unordered_map<size_t, float> _priority;
+
+			std::mt19937 _random_engine;
 
 			float _agentScale;
 			float _obstScale;

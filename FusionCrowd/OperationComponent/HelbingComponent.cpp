@@ -18,18 +18,19 @@ namespace FusionCrowd
 	namespace Helbing
 	{
 		HelbingComponent::HelbingComponent(std::shared_ptr<NavSystem> navSystem)
-			: _navSystem(navSystem), _agentScale(2000.f), _obstScale(2000.f), _reactionTime(0.5f), _bodyForse(1.2e5f), _friction(2.4e5f), _forceDistance(0.08f)
-		{
-		}
+			: HelbingComponent(navSystem, 2000.f, 2000.f, 0.5f, 1.2e5f, 2.4e5f, 0.08f)
+		{ }
 
 		HelbingComponent::HelbingComponent(std::shared_ptr<NavSystem> navSystem, float AGENT_SCALE, float OBST_SCALE, float REACTION_TIME, float BODY_FORCE, float FRICTION, float FORCE_DISTANCE):
-			_navSystem(navSystem), _agentScale(AGENT_SCALE), _obstScale(OBST_SCALE), _reactionTime(REACTION_TIME), _bodyForse(BODY_FORCE), _friction(FRICTION), _forceDistance(FORCE_DISTANCE)
-		{
-		}
-
-		HelbingComponent::~HelbingComponent()
-		{
-		}
+			_navSystem(navSystem),
+			_agentScale(AGENT_SCALE),
+			_obstScale(OBST_SCALE),
+			_reactionTime(REACTION_TIME),
+			_bodyForse(BODY_FORCE),
+			_friction(FRICTION),
+			_forceDistance(FORCE_DISTANCE),
+			_random_engine(std::mt19937(10))
+		{ }
 
 		void HelbingComponent::Update(float timeStep)
 		{
@@ -59,22 +60,25 @@ namespace FusionCrowd
 			agent.velNew = agent.GetVel() + acc * timeStep;
 		}
 
-		Vector2 HelbingComponent::AgentForce(AgentSpatialInfo* agent, NeighborInfo * other) const
+		Vector2 HelbingComponent::AgentForce(AgentSpatialInfo* agent, NeighborInfo * other)
 		{
 			/* compute right of way */
-			//float rightOfWay = fabs(agent->_priority - other->_priority);
-			//if (rightOfWay >= 1.f) {
-			//	rightOfWay = 1.f;
-			//}
+			float agentPriority = GetPriority(agent->id);
+			float otherPriority = GetPriority(other->id);
 
-			float rightOfWay = 0.0f;
+			float rightOfWay = fabs(agentPriority - otherPriority);
+			if (rightOfWay >= 1.f) {
+				rightOfWay = 1.f;
+			}
 
 			const float D = _forceDistance;
+			float Radii_ij = agent->radius + other->radius;
 			Vector2 normal_ij = agent->GetPos() - other->pos;
 			float distance_ij = normal_ij.Length();
 			normal_ij.Normalize();
 
-			float Radii_ij = agent->radius + other->radius;
+			if(distance_ij < Radii_ij)
+				distance_ij = Radii_ij;
 
 			float AGENT_SCALE = _agentScale;
 			float D_AGT = D;
@@ -84,41 +88,42 @@ namespace FusionCrowd
 			//		of the normal force.
 
 			Vector2 avoidNorm(normal_ij);
-			//if (rightOfWay) {
-			//	Vector2 perpDir;
-			//	if (agent->_priority < other->_priority) {
-			//		// his advantage
-			//		D_AGT += (rightOfWay * rightOfWay) * agent->radius * .5f;	// Note: there is no symmetric reduction on
-			//										// the other side
-			//		// modify normal direction
-			//		//	The perpendicular direction should always be in the direction that gets the
-			//		//	agent out of the way as easily as possible
-			//		float prefSpeed = other->_velPref.getSpeed();
-			//		if (prefSpeed < 0.0001f) {
-			//			// he wants to be stationary, accelerate perpinduclarly to displacement
-			//			perpDir = Vector2(-normal_ij.y, normal_ij.x);
-			//			if (perpDir.Dot(agent->vel) < 0.f)
-			//				perpDir *= -1;
-			//		}
-			//		else {
-			//			// He's moving somewhere, accelerate perpindicularly to his preferred direction
-			//			// of travel.
-			//			const Vector2 prefDir(other->_velPref.getPreferred());
-			//			perpDir = Vector2(-prefDir.y, prefDir.x);	// perpendicular to preferred velocity
-			//			if (perpDir.Dot(normal_ij) < 0.f)
-			//				perpDir *= -1;
-			//		}
-			//		// spherical linear interpolation
-			//		float sinTheta = Math::det(perpDir, normal_ij);
-			//		if (sinTheta < 0.f) {
-			//			sinTheta = -sinTheta;
-			//		}
-			//		if (sinTheta > 1.f) {
-			//			sinTheta = 1.f;	// clean up numerical error arising from determinant
-			//		}
-			//		avoidNorm = Math::slerp(rightOfWay, normal_ij, perpDir, sinTheta);
-			//	}
-			//}
+			if (rightOfWay) {
+				Vector2 perpDir;
+				if (agentPriority < otherPriority) {
+					// his advantage
+					D_AGT += (rightOfWay * rightOfWay) * agent->radius * .5f;	// Note: there is no symmetric reduction on the other side
+					// modify normal direction
+					//	The perpendicular direction should always be in the direction that gets the
+					//	agent out of the way as easily as possible
+					float prefSpeed = other->prefVel.Length();
+					if (prefSpeed < 0.0001f) {
+						// he wants to be stationary, accelerate perpinduclarly to displacement
+						perpDir = Vector2(-normal_ij.y, normal_ij.x);
+						if (perpDir.Dot(agent->GetVel()) < 0.f)
+							perpDir *= -1;
+					}
+					else {
+						// He's moving somewhere, accelerate perpindicularly to his preferred direction
+						// of travel.
+						Vector2 prefDir(other->prefVel);
+						prefDir.Normalize();
+
+						perpDir = Vector2(-prefDir.y, prefDir.x);	// perpendicular to preferred velocity
+						if (perpDir.Dot(normal_ij) < 0.f)
+							perpDir *= -1;
+					}
+					// spherical linear interpolation
+					float sinTheta = Math::det(perpDir, normal_ij);
+					if (sinTheta < 0.f) {
+						sinTheta = -sinTheta;
+					}
+					if (sinTheta > 1.f) {
+						sinTheta = 1.f;	// clean up numerical error arising from determinant
+					}
+					avoidNorm = Math::slerp(rightOfWay, normal_ij, perpDir, sinTheta);
+				}
+			}
 			float mag = (AGENT_SCALE * expf((Radii_ij - distance_ij) / D_AGT));
 			const float MAX_FORCE = 1e15f;
 			if (mag >= MAX_FORCE) {
@@ -150,8 +155,20 @@ namespace FusionCrowd
 			return (agentInfo.prefVelocity.getPreferredVel() - agent->GetVel()) * (_agents[agent->id]._mass / _reactionTime);
 		}
 
+		float HelbingComponent::GetPriority(size_t agentId)
+		{
+			if(_priority.find(agentId) == _priority.end())
+			{
+				std::uniform_real_distribution<float> dist(0.f, 1.f);
+				_priority.insert({agentId, dist(_random_engine)});
+			}
+
+			return _priority.at(agentId);
+		}
+
 		void HelbingComponent::AddAgent(size_t id, float mass)
 		{
+
 			_agents[id] = AgentParamentrs(mass);
 			_navSystem->GetSpatialInfo(id).inertiaEnabled = false;
 		}
@@ -163,8 +180,7 @@ namespace FusionCrowd
 
 		bool HelbingComponent::DeleteAgent(size_t id)
 		{
-			_agents.erase(id);
-			return true;
+			return _agents.erase(id) > 0;
 		}
 	}
 }
