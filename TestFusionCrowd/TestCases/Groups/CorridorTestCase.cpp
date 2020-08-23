@@ -11,7 +11,7 @@ namespace TestFusionCrowd
 {
 	CorridorTestCase::CorridorTestCase(size_t halfNum, float groupFraction, size_t steps)
 	: ITestCase(halfNum * 2, steps, true),
-		_opComponent(ComponentIds::ORCA_ID),
+		_opComponent(ComponentIds::HELBING_ID),
 		_groups(halfNum * groupFraction / 2),
 		_singles(halfNum - _groups * 2),
 		_busy(std::vector<std::vector<bool>>(10))
@@ -23,8 +23,8 @@ namespace TestFusionCrowd
 	void CorridorTestCase::SetUpGroup(float gx, float gy)
 	{
 		size_t groupId = _sim->AddGridGroup(gx, gy, 2, 0.1);
-		size_t a1 = _sim->AddAgent(gx, gy + 0.2, ComponentIds::ORCA_ID, ComponentIds::NAVMESH_ID, ComponentIds::NO_COMPONENT);
-		size_t a2 = _sim->AddAgent(gx, gy - 0.2, ComponentIds::ORCA_ID, ComponentIds::NAVMESH_ID, ComponentIds::NO_COMPONENT);
+		size_t a1 = _sim->AddAgent(gx, gy + 0.2, _opComponent, ComponentIds::NAVMESH_ID, ComponentIds::NO_COMPONENT);
+		size_t a2 = _sim->AddAgent(gx, gy - 0.2, _opComponent, ComponentIds::NAVMESH_ID, ComponentIds::NO_COMPONENT);
 		_sim->AddAgentToGroup(a1, groupId);
 		_sim->AddAgentToGroup(a2, groupId);
 		_sim->SetGroupGoal(groupId, 30 - gx, gy);
@@ -44,7 +44,7 @@ namespace TestFusionCrowd
 
 		_busy[(int) y][(int) x] = true;
 
-		size_t a = _sim->AddAgent(x, y, ComponentIds::ORCA_ID, ComponentIds::NAVMESH_ID, ComponentIds::NO_COMPONENT);
+		size_t a = _sim->AddAgent(x, y, _opComponent, ComponentIds::NAVMESH_ID, ComponentIds::NO_COMPONENT);
 		_sim->SetAgentGoal(a, Point(30-x, y));
 	}
 
