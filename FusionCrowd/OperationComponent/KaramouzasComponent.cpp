@@ -84,6 +84,8 @@ namespace FusionCrowd
 
 			void ComputeNewVelocity(AgentSpatialInfo & agent, float timeStep)
 			{
+				collidingSet.clear();
+
 				const float EPSILON = 0.01f; // this eps from Ioannis
 				const float FOV = _cosFOVAngle;
 

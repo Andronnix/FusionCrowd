@@ -162,6 +162,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="TestCases\DebugTestCase.h" />
     <ClInclude Include="TestCases\Groups\CorridorTestCase.h" />
     <ClInclude Include="TestCases\Components\GoalShapeTestCase.h" />
     <ClInclude Include="TestCases\ExchangeCircleCase.h" />
@@ -182,6 +183,7 @@
     <ClInclude Include="TestCases\TradeshowTestCase.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="TestCases\DebugTestCase.cpp" />
     <ClCompile Include="TestCases\Groups\CorridorTestCase.cpp" />
     <ClCompile Include="TestCases\Components\GoalShapeTestCase.cpp" />
     <ClCompile Include="TestCases\ExchangeCircleCase.cpp" />

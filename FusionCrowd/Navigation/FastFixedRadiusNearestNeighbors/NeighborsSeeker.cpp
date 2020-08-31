@@ -37,7 +37,7 @@ namespace FusionCrowd
 		std::future<NeighborsSeeker::SearchResult> result;
 	};
 
-	std::vector<NeighborsSeeker::SearchResult> NeighborsSeeker::FindNeighborsCpu(std::vector<NeighborsSeeker::SearchRequest> searchRequests)
+	std::vector<NeighborsSeeker::SearchResult> NeighborsSeeker::FindNeighborsCpu(std::vector<NeighborsSeeker::SearchRequest> & searchRequests)
 	{
 		std::vector<NeighborsSeeker::SearchResult> result;
 

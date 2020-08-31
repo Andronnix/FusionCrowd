@@ -154,7 +154,7 @@ class Player:
 
         return self.canvas.create_line(*scaled, fill=color, **kwargs)
 
-    def circle(self, p, R, fill="white", outline="white"):
+    def circle(self, p, R, fill="white", outline=None):
         x, y = p[0] * self.scale, p[1] * self.scale
         r = R * self.scale
         result = self.canvas.create_oval(x - r, y - r, x + r, y + r, fill=fill, outline=outline)

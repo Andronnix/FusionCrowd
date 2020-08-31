@@ -56,7 +56,7 @@ def redraw_positions(player: Player, recording: Recording, frame, ovals=None, or
                 infos[frame].pos,
                 infos[frame].R,
                 fill=all_colors[agent_id % len(all_colors)] if infos[frame].type is AgentType.Agent else "",
-                outline="black"
+                #outline="black"
             )
 
             if not hide_orientation:

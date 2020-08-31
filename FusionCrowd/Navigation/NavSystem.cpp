@@ -3,6 +3,7 @@
 
 #include "Math/Util.h"
 #include "Math/consts.h"
+#include "Math/geomQuery.h"
 #include "TacticComponent/NavMesh/NavMeshComponent.h"
 
 #include "Navigation/AgentSpatialInfo.h"
@@ -18,6 +19,7 @@
 #include <unordered_map>
 #include <map>
 #include <algorithm>
+#include <iostream>
 #include <math.h>
 
 using namespace DirectX::SimpleMath;
@@ -110,20 +112,105 @@ namespace FusionCrowd
 			return result;
 		}
 
+		struct AgentUpdate
+		{
+			AgentSpatialInfo & agent;
+			Vector2 newPos;
+			Vector2 newVel;
+			Vector2 newOrient;
+			AgentUpdate(AgentSpatialInfo & target) : agent(target)
+			{ }
+
+			void apply()
+			{
+				agent.Update(newPos, newVel, newOrient);
+			}
+		};
+
+		size_t updates_cnt = 0;
+
 		void Update(float timeStep)
 		{
-			for (auto & info : _agentsInfo)
+			std::unordered_map<size_t, AgentUpdate> updates;
+			float timeLeft = timeStep;
+			float MIN_DT = 0.001;
+			size_t subSteps = 0;
+
+			std::cout << " Step " << updates_cnt++ << std::endl;
+
+			do {
+				bool collisionHappened = false;
+				size_t rewindsLeft = 5;
+				float step = timeLeft;
+
+				do {
+					updates.clear();
+					collisionHappened = false;
+
+					for (auto & info : _agentsInfo)
+					{
+						AgentSpatialInfo &  currentInfo = info.second;
+
+						AgentUpdate & update = updates.insert({currentInfo.id, AgentUpdate(currentInfo)}).first->second;
+
+						UpdatePos(currentInfo, step, update.newPos, update.newVel);
+						UpdateOrient(currentInfo, step, update.newVel, update.newOrient);
+					}
+
+					float collisionTime = CheckCollisions(updates, step);
+					if(collisionTime <= step)
+					{
+						step = collisionTime * 0.95f;
+						collisionHappened = true;
+					}
+				} while(collisionHappened && rewindsLeft-- > 0);
+
+				std::cout << "  step = " << std::to_string(step) << std::endl;
+				timeLeft -= step;
+				subSteps++;
+
+				for(auto & u : updates)
+				{
+					u.second.apply();
+				}
+				UpdateNeighbours();
+			} while(timeLeft > Math::EPS);
+
+			std::cout << " Total substeps: " << subSteps << std::endl;
+		}
+
+		float CheckCollisions(const std::unordered_map<size_t, AgentUpdate> & updates, const float stepTime)
+		{
+			float time = stepTime + 1;
+			bool happened = false;
+			int count = 0;
+			for(auto & pair : updates)
 			{
-				AgentSpatialInfo & currentInfo = info.second;
+				auto & agent = pair.second;
+				Vector2 agentOldPos = _agentsInfo[pair.first].GetPos();
+				Vector2 agentVel = agent.newPos - agentOldPos;
 
-				Vector2 newPos, newVel, newOrient;
-				UpdatePos(currentInfo, timeStep, newPos, newVel);
-				UpdateOrient(currentInfo, timeStep, newVel, newOrient);
+				for(auto & n : GetNeighbours(agent.agent.id))
+				{
+					Vector2 nVel = updates.at(n.id).newPos - n.pos;
 
-				currentInfo.Update(newPos, newVel, newOrient);
+					float cTime = Math::rayCircleTTC(-nVel + agentVel, n.pos - agentOldPos, agent.agent.radius + n.radius);
+
+					if(cTime < 1)
+					{
+						count++;
+						happened = true;
+						time = std::min(time, cTime * stepTime);
+					}
+				}
 			}
 
-			UpdateNeighbours();
+			std::cout << "  Collision count: " << count << std::endl;
+
+			if(!happened)
+				return Math::INFTY;
+
+			return time;
 		}
 
 		void UpdatePos(AgentSpatialInfo & agent, float timeStep, Vector2 & updatedPos, Vector2 & updatedVel)
@@ -222,11 +309,16 @@ namespace FusionCrowd
 				agentRequests.push_back(info.second);
 			}
 
+			size_t overlapped = 0;
 			for(const auto& p : _neighborsSeeker.FindNeighborsCpu(agentRequests))
 			{
 				_agentsNeighbours[p.agentId] = p.neighbors;
 				_agentsInfo[p.agentId].setOverlaping(p.isOverlapped);
+				if(p.isOverlapped)
+					overlapped++;
 			}
+			if(overlapped > 0)
+				std::cout << "Overlapped : " << overlapped << std::endl;
 		}
 
 		void Init() {
@@ -255,7 +347,7 @@ namespace FusionCrowd
 		std::shared_ptr<NavMeshLocalizer> _localizer;
 
 		NeighborsSeeker _neighborsSeeker;
-		std::map<size_t, AgentSpatialInfo> _agentsInfo;
+		std::unordered_map<size_t, AgentSpatialInfo> _agentsInfo;
 		float _agentsSensitivityRadius = 6;
 		float _groupSensitivityRadius = 100;
 

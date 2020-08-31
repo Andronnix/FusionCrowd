@@ -25,7 +25,7 @@ namespace FusionCrowd
 	public:
 		NeighborsSeeker();
 
-		std::vector<SearchResult> FindNeighborsCpu(std::vector<SearchRequest> searchRequests);
+		std::vector<SearchResult> FindNeighborsCpu(std::vector<SearchRequest> & searchRequests);
 
 	private:
 		ctpl::thread_pool _pool;
