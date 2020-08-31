@@ -41,7 +41,7 @@ namespace FusionCrowd
 		std::vector<NeighborInfo> GetNeighbours(size_t agentId) const;
 		std::vector<Obstacle> GetClosestObstacles(size_t agentId);
 
-		void Update(float timeStep);
+		float Update(float timeStep, bool rewindAvailable); // returns time left
 
 	public:
 		// INavSystemPublic

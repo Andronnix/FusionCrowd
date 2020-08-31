@@ -115,8 +115,8 @@ int main()
 	std::vector<std::shared_ptr<ITestCase>> cases =
 	{
 		// std::shared_ptr<ITestCase>((ITestCase*) new FsmTestCase(FusionCrowd::ComponentIds::BICYCLE, 50, 2000, true)),
-		// std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 100, true)),
-		std::shared_ptr<ITestCase>((ITestCase*) new DebugTestCase(FusionCrowd::ComponentIds::STRICT_ID, 100)),
+		std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 100, true)),
+		// std::shared_ptr<ITestCase>((ITestCase*) new DebugTestCase(FusionCrowd::ComponentIds::KARAMOUZAS_ID, 100)),
 		// std::shared_ptr<ITestCase>((ITestCase*) new ZanlungoCase()),
 		// std::shared_ptr<ITestCase>((ITestCase*) new CrossingTestCase(FusionCrowd::ComponentIds::KARAMOUZAS_ID, 30, 1000, false)),
 		// std::shared_ptr<ITestCase>((ITestCase*) new PinholeTestCase(FusionCrowd::ComponentIds::KARAMOUZAS_ID, 2, 100)),

@@ -122,7 +122,7 @@ namespace FusionCrowd
 								result.neighbors.push_back(NeighborInfo(n));
 							}
 
-							result.isOverlapped = result.isOverlapped || (Vector2::Distance(r.GetPos(), n.GetPos()) < (r.radius + n.radius));
+							result.isOverlapped = result.isOverlapped || (Vector2::Distance(r.GetPos(), n.GetPos()) < (r.radius + n.radius) + Math::EPS);
 						}
 					}
 				}

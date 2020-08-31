@@ -129,57 +129,42 @@ namespace FusionCrowd
 
 		size_t updates_cnt = 0;
 
-		void Update(float timeStep)
+		float Update(float timeStep, bool rewindAvailable)
 		{
 			std::unordered_map<size_t, AgentUpdate> updates;
-			float timeLeft = timeStep;
-			float MIN_DT = 0.001;
-			size_t subSteps = 0;
+			std::cout << " Step " << updates_cnt++ << " , timeStep = " << std::to_string(timeStep) << std::endl;
 
-			std::cout << " Step " << updates_cnt++ << std::endl;
+			for (auto & info : _agentsInfo)
+			{
+				AgentSpatialInfo &  currentInfo = info.second;
 
-			do {
-				bool collisionHappened = false;
-				size_t rewindsLeft = 5;
-				float step = timeLeft;
+				AgentUpdate & update = updates.insert({currentInfo.id, AgentUpdate(currentInfo)}).first->second;
 
-				do {
-					updates.clear();
-					collisionHappened = false;
+				UpdatePos(currentInfo, timeStep, update.newPos, update.newVel);
+				UpdateOrient(currentInfo, timeStep, update.newVel, update.newOrient);
+			}
 
-					for (auto & info : _agentsInfo)
-					{
-						AgentSpatialInfo &  currentInfo = info.second;
+			if(rewindAvailable)
+			{
+				float MIN_DT = 0.01;
 
-						AgentUpdate & update = updates.insert({currentInfo.id, AgentUpdate(currentInfo)}).first->second;
-
-						UpdatePos(currentInfo, step, update.newPos, update.newVel);
-						UpdateOrient(currentInfo, step, update.newVel, update.newOrient);
-					}
-
-					float collisionTime = CheckCollisions(updates, step);
-					if(collisionTime <= step)
-					{
-						step = collisionTime * 0.95f;
-						collisionHappened = true;
-					}
-				} while(collisionHappened && rewindsLeft-- > 0);
-
-				std::cout << "  step = " << std::to_string(step) << std::endl;
-				timeLeft -= step;
-				subSteps++;
-
-				for(auto & u : updates)
+				float collisionTime = CheckCollisions(updates, timeStep, MIN_DT);
+				if(collisionTime <= timeStep)
 				{
-					u.second.apply();
+					return Update(collisionTime * 0.95f, false);
 				}
-				UpdateNeighbours();
-			} while(timeLeft > Math::EPS);
+			}
 
-			std::cout << " Total substeps: " << subSteps << std::endl;
+			for(auto & u : updates)
+			{
+				u.second.apply();
+			}
+			UpdateNeighbours();
+
+			return timeStep;
 		}
 
-		float CheckCollisions(const std::unordered_map<size_t, AgentUpdate> & updates, const float stepTime)
+		float CheckCollisions(const std::unordered_map<size_t, AgentUpdate> & updates, const float stepTime, const float minTimeThreshold)
 		{
 			float time = stepTime + 1;
 			bool happened = false;
@@ -196,7 +181,7 @@ namespace FusionCrowd
 
 					float cTime = Math::rayCircleTTC(-nVel + agentVel, n.pos - agentOldPos, agent.agent.radius + n.radius);
 
-					if(cTime < 1)
+					if(cTime < 1 && cTime * stepTime >= minTimeThreshold)
 					{
 						count++;
 						happened = true;
@@ -385,9 +370,9 @@ namespace FusionCrowd
 		return pimpl->GetClosestObstacles(agentId);
 	}
 
-	void NavSystem::Update(float timeStep)
+	float NavSystem::Update(float timeStep, bool rewindAvailable)
 	{
-		pimpl->Update(timeStep);
+		return pimpl->Update(timeStep, rewindAvailable);
 	}
 
 	void NavSystem::Init() {

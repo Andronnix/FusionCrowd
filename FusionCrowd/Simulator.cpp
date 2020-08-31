@@ -34,6 +34,12 @@ namespace FusionCrowd
 
 		bool DoStep(float timeStep)
 		{
+			if(_currentTime < Math::EPS && _isRecording)
+			{
+				_navSystem->Update(0, false);
+				MakeRecord(0.0f);
+			}
+
 			_currentTime += timeStep;
 
 			for (auto & strategy : _strategyComponents)
@@ -48,16 +54,23 @@ namespace FusionCrowd
 
 			SwitchOpComponents();
 
-			for (auto & oper : _operComponents)
-			{
-				oper.second->Update(timeStep);
-			}
 
-			_navSystem->Update(timeStep);
+			int rewinds = 5;
+			float timeLeft = timeStep;
 
-			if (_isRecording) {
-				MakeRecord(timeStep);
-			}
+			do {
+				for (auto & oper : _operComponents)
+				{
+					oper.second->Update(timeLeft);
+				}
+
+				float dt = _navSystem->Update(timeLeft, rewinds > 0);
+				timeLeft -= dt;
+
+				if (_isRecording) {
+					MakeRecord(dt);
+				}
+			} while(timeLeft > Math::EPS && rewinds-- > 0);
 
 
 			return true;
