@@ -24,8 +24,8 @@ namespace FusionCrowd
 		public:
 			KaramouzasComponentImpl(std::shared_ptr<NavSystem> navSystem):
 				_navSystem(navSystem),
-				_orientWeight(0.8f), _cosFOVAngle(cos(100.f * Math::DEG_TO_RAD)), _reactionTime(0.4f), _wallSteepness(2.f),
-				_wallDistance(2.f), _collidingCount(5), _dMin(1.f), _dMid(8.f), _dMax(10.f), _agentForce(3.f)
+				_orientWeight(0.8f), _cosFOVAngle(cosf(200.f * Math::PI * 0.5f / 180.f)), _reactionTime(0.4f), _wallSteepness(2.f),
+				_wallDistance(2.f), _collidingCount(5), _dMin(.3f), _dMid(4.f), _dMax(10.f), _agentForce(1.f)
 			{
 			}
 
@@ -86,7 +86,7 @@ namespace FusionCrowd
 			{
 				collidingSet.clear();
 
-				const float EPSILON = 0.01f; // this eps from Ioannis
+				const float EPSILON = 0.005f; // this eps from Ioannis
 				const float FOV = _cosFOVAngle;
 
 				Vector2 force((agent.prefVelocity.getPreferredVel() - agent.GetVel()) / _reactionTime);
@@ -116,21 +116,20 @@ namespace FusionCrowd
 
 				Vector2 desVel = agent.GetVel() + force * timeStep;
 				float desSpeed = desVel.Length();
+				if(desSpeed > agent.maxSpeed)
+				{
+					desVel *=  agent.maxSpeed / desSpeed;
+					desSpeed = agent.maxSpeed;
+				}
 				force = Vector2(0.f, 0.f);
-				//#if 0
-				//		// iteratively evaluate neighbors
-				//#else
-						// Weight all neighbors
+
 				bool colliding = false;
-				int collidingCount = _collidingCount;
-				bool VERBOSE = false; // _id == 1;
-				if (VERBOSE) std::cout << "Agent " << agent.id << "\n";
-				float totalTime = 1.f;
 
 				auto const & neighbours = _navSystem->GetNeighbours(agent.id);
+				auto const & agentParams = _agents[agent.id];
 				for (const auto & other : neighbours)
 				{
-					float circRadius = _agents[agent.id]._perSpace + other.radius;
+					float circRadius = agentParams._perSpace + other.radius;
 					Vector2 relVel = desVel - other.vel;
 					Vector2 relPos = other.pos - agent.GetPos();
 
@@ -141,9 +140,7 @@ namespace FusionCrowd
 							collidingSet.clear();
 							collidingSet.reserve(neighbours.size());
 						}
-						//collidingSet.push({.0f, other});
 						collidingSet.push_back({.0f, other});
-						if (static_cast<int>(collidingSet.size()) > collidingCount) ++collidingCount;
 						continue;
 					}
 
@@ -151,29 +148,34 @@ namespace FusionCrowd
 					//		If relPos is not within the field of view around preferred direction, continue
 					Vector2 relDir;
 					relPos.Normalize(relDir);
-					if (relDir.Dot(agent.GetOrient()) < FOV) continue;
-					float tc = Math::rayCircleTTC(relVel, relPos, circRadius);
-					if (tc < _agents[agent.id]._anticipation && !colliding) {
-						if (VERBOSE) std::cout << "\tAgent " << other.id << " t_c: " << tc << "\n";
-						//totalTime += tc;
-						// insert into colliding set (in order)
 
-						/*
-						auto itr = collidingSet.begin();
-						while (itr != collidingSet.end() && tc > itr->tc) ++itr;
-						collidingSet.insert(itr, {tc, other});
-						*/
-						collidingSet.push_back({tc, other});
+					Vector2 tmp;agent.GetVel().Normalize(tmp);
+					if (relDir.Dot(tmp) < FOV) {
+						continue;
 					}
+					float tc = Math::rayCircleTTC(relVel, relPos, circRadius);
+					if (tc >= agentParams._anticipation)
+					{
+						continue;
+					}
+
+					collidingSet.push_back({tc, other});
 				}
 
 				auto cmp = [](const SpatialInfoWithCollisionTime & left, const SpatialInfoWithCollisionTime & right) { return left.tc < right.tc; };
 				std::sort(collidingSet.begin(), collidingSet.end(), cmp);
 
-				int count = 0;
-				for (auto itr = collidingSet.begin(); itr != collidingSet.end(); ++itr) {
-					const auto& other = itr->info;
-					float tc = itr->tc;
+				size_t count = 0;
+				size_t i = 0;
+				for (const auto & pair : collidingSet) {
+					if(i > _collidingCount)
+					{
+						break;
+					}
+
+					i++;
+					const auto& other = pair.info;
+					float tc = pair.tc;
 					// future positions
 					Vector2 myPos = agent.GetPos() + desVel * tc;
 					Vector2 hisPos = other.pos + other.vel * tc;
@@ -202,20 +204,12 @@ namespace FusionCrowd
 						continue;	// magnitude is zero
 					}
 					float weight = pow(colliding ? 1.f : 0.8f, count++);
-					//float weight = ( totalTime - tc  ) / totalTime; //1.f / ( tc * totalTime );
-					if (VERBOSE) {
-						std::cout << "\tAgent " << other.id;
-						std::cout << " magnitude: " << mag;
-						std::cout << " weight: " << weight;
-						std::cout << " total force: " << (mag * weight);
-						std::cout << " D: " << D << "\n";
-					}
 					force += forceDir * (mag * weight);
 				}
 				// Add some noise to avoid deadlocks and introduce variation
 				//float angle = rand() * 2.0f * M_PI / RAND_MAX;
 				float angle = rand() * 2.0f * 3.1415f / RAND_MAX;
-				float dist = rand() * 0.001f / RAND_MAX;
+				float dist = rand() * 0.001f / timeStep / RAND_MAX;
 				force += dist * Vector2(cos(angle), sin(angle));
 				// do we need a drag force?
 
@@ -232,6 +226,8 @@ namespace FusionCrowd
 			std::vector<SpatialInfoWithCollisionTime> collidingSet;
 			std::shared_ptr<NavSystem> _navSystem;
 			std::map<int, AgentParamentrs> _agents;
+
+			size_t MAX_NEIGHBOURS = 3;
 			float _orientWeight;
 			float _cosFOVAngle;
 			float _reactionTime;

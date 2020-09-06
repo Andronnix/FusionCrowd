@@ -21,10 +21,10 @@ namespace TestFusionCrowd
 		_sim = std::unique_ptr<ISimulatorFacade, decltype(&SimulatorFacadeDeleter)>(builder->Build(), SimulatorFacadeDeleter);
 
 
-		size_t id = _sim->AddAgent(-4.75f, 0.0f, _opComponent, ComponentIds::NAVMESH_ID, -1);
-		_sim->SetAgentGoal(id, Point { 5.0f, 0.0f });
+		size_t id = _sim->AddAgent(-1.f, 0.0f, _opComponent, ComponentIds::NAVMESH_ID, -1);
+		_sim->SetAgentGoal(id, Point { 1.0f, 0.0f });
 
-		size_t id2 = _sim->AddAgent(0.0f, -5.0f, _opComponent, ComponentIds::NAVMESH_ID, -1);
-		_sim->SetAgentGoal(id2, Point { 0.0f, 5.0f });
+		size_t id2 = _sim->AddAgent(0.0f, 0.0f, _opComponent, ComponentIds::NAVMESH_ID, -1);
+		//_sim->SetAgentGoal(id2, Point { 0.0f, 5.0f });
 	}
 }

@@ -52,7 +52,7 @@ namespace FusionCrowd
 
 	void OnlineRecording::MakeRecord(std::vector<AgentInfo> && agentsInfos, float timeStep)
 	{
-		assert(timeStep > 0 && "Time step must be positive");
+		assert(timeStep >= 0 && "Time step must be positive");
 
 		m_snapshotTimes.push_back(m_currentTime);
 		m_slices.push_back(m_currentSlice);

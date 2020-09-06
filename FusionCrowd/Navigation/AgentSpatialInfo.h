@@ -30,7 +30,7 @@ namespace FusionCrowd
 
 		float radius    = 0.19f;
 		float maxSpeed  = 2.f;
-		float maxAccel  = 0.5f;
+		float maxAccel  = 10.f;
 		float prefSpeed = 1.04f;
 		float maxAngVel = 2 * Math::TWOPI;
 

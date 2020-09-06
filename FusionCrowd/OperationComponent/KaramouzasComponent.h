@@ -19,7 +19,7 @@ namespace FusionCrowd
 			float _perSpace;
 			float _anticipation;
 
-			AgentParamentrs() :_perSpace(0.69f), _anticipation(8.f)
+			AgentParamentrs() : _perSpace(0.3f), _anticipation(8.f)
 			{
 			}
 			AgentParamentrs(float perSpace, float anticipation) :_perSpace(perSpace), _anticipation(anticipation)

@@ -146,7 +146,7 @@ namespace FusionCrowd
 
 			if(rewindAvailable)
 			{
-				float MIN_DT = 0.01;
+				float MIN_DT = 0.0001;
 
 				float collisionTime = CheckCollisions(updates, timeStep, MIN_DT);
 				if(collisionTime <= timeStep)
@@ -169,6 +169,7 @@ namespace FusionCrowd
 			float time = stepTime + 1;
 			bool happened = false;
 			int count = 0;
+			int ignored = 0;
 			for(auto & pair : updates)
 			{
 				auto & agent = pair.second;
@@ -181,16 +182,22 @@ namespace FusionCrowd
 
 					float cTime = Math::rayCircleTTC(-nVel + agentVel, n.pos - agentOldPos, agent.agent.radius + n.radius);
 
-					if(cTime < 1 && cTime * stepTime >= minTimeThreshold)
+					if(cTime < 1)
 					{
-						count++;
-						happened = true;
-						time = std::min(time, cTime * stepTime);
+						if(cTime * stepTime >= minTimeThreshold)
+						{
+							count++;
+							happened = true;
+							time = std::min(time, cTime * stepTime);
+						} else
+						{
+							ignored++;
+						}
 					}
 				}
 			}
 
-			std::cout << "  Collision count: " << count << std::endl;
+			std::cout << "  Collisions: " << count + ignored << ", ignored: " << ignored << std::endl;
 
 			if(!happened)
 				return Math::INFTY;
@@ -218,6 +225,11 @@ namespace FusionCrowd
 			else
 			{
 				updatedVel = agent.velNew;
+			}
+
+			if(updatedVel.Length() > agent.maxSpeed)
+			{
+				updatedVel *= agent.maxSpeed / updatedVel.Length();
 			}
 
 			updatedPos = agent.GetPos() + updatedVel * timeStep;

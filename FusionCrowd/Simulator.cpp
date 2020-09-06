@@ -55,7 +55,7 @@ namespace FusionCrowd
 			SwitchOpComponents();
 
 
-			int rewinds = 5;
+			int rewinds = 10;
 			float timeLeft = timeStep;
 
 			do {
