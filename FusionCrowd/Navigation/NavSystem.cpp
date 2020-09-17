@@ -132,7 +132,7 @@ namespace FusionCrowd
 		float Update(float timeStep, bool rewindAvailable)
 		{
 			std::unordered_map<size_t, AgentUpdate> updates;
-			std::cout << " Step " << updates_cnt++ << " , timeStep = " << std::to_string(timeStep) << std::endl;
+			//std::cout << " Step " << updates_cnt++ << " , timeStep = " << std::to_string(timeStep) << std::endl;
 
 			for (auto & info : _agentsInfo)
 			{
@@ -197,7 +197,7 @@ namespace FusionCrowd
 				}
 			}
 
-			std::cout << "  Collisions: " << count + ignored << ", ignored: " << ignored << std::endl;
+			//std::cout << "  Collisions: " << count + ignored << ", ignored: " << ignored << std::endl;
 
 			if(!happened)
 				return Math::INFTY;
@@ -314,8 +314,8 @@ namespace FusionCrowd
 				if(p.isOverlapped)
 					overlapped++;
 			}
-			if(overlapped > 0)
-				std::cout << "Overlapped : " << overlapped << std::endl;
+
+			// if(overlapped > 0) std::cout << "Overlapped : " << overlapped << std::endl;
 		}
 
 		void Init() {

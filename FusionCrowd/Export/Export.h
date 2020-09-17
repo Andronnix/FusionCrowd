@@ -92,6 +92,8 @@ namespace FusionCrowd
 			virtual IStrategyComponent* GetStrategy(ComponentId strategyId) const = 0;
 			virtual void SetIsRecording(bool isRecording) = 0;
 
+			virtual void SetMaxRewinds(size_t maxRewinds) = 0;
+
 			virtual INavMeshPublic* GetNavMesh() const = 0;
 			virtual INavSystemPublic* GetNavSystem() const = 0;
 

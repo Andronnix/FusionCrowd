@@ -38,7 +38,9 @@ namespace FusionCrowd
 
 		size_t i = result - m_snapshotTimes.begin();
 
-		return m_slices[i];
+		auto it = m_slices.begin();
+		std::advance(it, i);
+		return *it;
 	}
 
 	const OnlineRecordingSlice & OnlineRecording::GetCurrentSlice() const {

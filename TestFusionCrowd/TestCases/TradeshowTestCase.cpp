@@ -35,6 +35,14 @@ namespace TestFusionCrowd
 		HappyTimer
 	};
 
+	TradeshowTestCase::TradeshowTestCase(size_t agentsNum, size_t simSteps, bool writeTraj) : ITestCase(agentsNum, simSteps, writeTraj)
+	{};
+
+	TradeshowTestCase::TradeshowTestCase(size_t agentsNum, size_t simSteps, FusionCrowd::ComponentId opComponent, size_t maxRewinds, std::string customName)
+		: ITestCase(agentsNum, simSteps, true), _op(opComponent), _name(customName), _maxRewinds(maxRewinds)
+	{}
+
+
 	void TradeshowTestCase::Pre()
 	{
 		std::unique_ptr<ISimulatorBuilder, decltype(&BuilderDeleter)> builder(BuildSimulator(), BuilderDeleter);
@@ -43,6 +51,7 @@ namespace TestFusionCrowd
 			->WithStrategy(ComponentIds::FSM_ID);
 
 		_sim = std::shared_ptr<ISimulatorFacade>(builder->Build(), SimulatorFacadeDeleter);
+		_sim->SetMaxRewinds(_maxRewinds);
 
 		std::unique_ptr<Fsm::IBuilder, decltype(&Fsm::BuilderDeleter)> fsmBuilder(Fsm::Builder(), Fsm::BuilderDeleter);
 

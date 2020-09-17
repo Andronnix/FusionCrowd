@@ -52,6 +52,7 @@ namespace FusionCrowd
 
 		OnlineRecording & GetRecording();
 		void SetIsRecording(bool isRecording);
+		void SetMaxRewinds(size_t maxRewinds);
 
 		float GetElapsedTime();
 

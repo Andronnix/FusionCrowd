@@ -55,7 +55,7 @@ namespace FusionCrowd
 			SwitchOpComponents();
 
 
-			int rewinds = 10;
+			int rewinds = _maxRewinds;
 			float timeLeft = timeStep;
 
 			do {
@@ -529,6 +529,11 @@ namespace FusionCrowd
 			return _goalFactory;
 		}
 
+		void SetMaxRewinds(size_t maxRewinds)
+		{
+			_maxRewinds = maxRewinds;
+		}
+
 	private:
 		size_t GetNextId()
 		{
@@ -576,6 +581,7 @@ namespace FusionCrowd
 		}
 	private:
 		size_t _nextAgentId = 0;
+		size_t _maxRewinds = 10;
 
 		// groupId == 0 means that agent has no group
 		size_t _nextGroupId = 1;
@@ -722,6 +728,11 @@ namespace FusionCrowd
 	}
 	OperationStatus Simulator::RemoveGroup(size_t groupId) {
 		return pimpl->RemoveGroup(groupId);
+	}
+
+	void Simulator::SetMaxRewinds(size_t maxRewinds)
+	{
+		pimpl->SetMaxRewinds(maxRewinds);
 	}
 
 	void Simulator::SetAgentGoal(size_t agentId, Goal && goal)

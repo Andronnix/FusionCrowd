@@ -85,10 +85,10 @@ void Run(std::shared_ptr<ITestCase> testCase, std::vector<long long> & outMeasur
 		<< std::endl;
 }
 
-void WriteToFile(std::shared_ptr<ITestCase> testCase, std::vector<long long> measurements, time_point startTime, std::string folder)
+void WriteToFile(std::shared_ptr<ITestCase> testCase, std::vector<long long> measurements, time_point startTime, std::string folder, bool timeStamp = true)
 {
-	std::string d = date::format("%H%M%S", startTime);
-	std::string prefix = folder + "\\" + d + "_" + testCase->GetName();
+	std::string d = timeStamp ? date::format("%H%M%S", startTime) + "_" : "";
+	std::string prefix = folder + "\\" + d + testCase->GetName();
 
 	if(testCase->WriteTime)
 	{
@@ -115,7 +115,7 @@ int main()
 	std::vector<std::shared_ptr<ITestCase>> cases =
 	{
 		// std::shared_ptr<ITestCase>((ITestCase*) new FsmTestCase(FusionCrowd::ComponentIds::BICYCLE, 50, 2000, true)),
-		std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 100, true)),
+		// std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 1000, true)),
 		// std::shared_ptr<ITestCase>((ITestCase*) new DebugTestCase(FusionCrowd::ComponentIds::KARAMOUZAS_ID, 100)),
 		// std::shared_ptr<ITestCase>((ITestCase*) new ZanlungoCase()),
 		// std::shared_ptr<ITestCase>((ITestCase*) new CrossingTestCase(FusionCrowd::ComponentIds::KARAMOUZAS_ID, 30, 1000, false)),
@@ -128,6 +128,25 @@ int main()
 		// std::shared_ptr<ITestCase>((ITestCase*) new GroupPerformanceTestCase()),
 		// std::shared_ptr<ITestCase>((ITestCase*) new GoalShapeTestCase())
 		// std::shared_ptr<ITestCase>((ITestCase*) new CorridorTestCase(30, .2f, 500)),
+		//
+		//
+		std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 1000, FusionCrowd::ComponentIds::KARAMOUZAS_ID, 0, "Karamouzas_0")),
+		std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 1000, FusionCrowd::ComponentIds::KARAMOUZAS_ID, 5, "Karamouzas_5")),
+		std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 1000, FusionCrowd::ComponentIds::KARAMOUZAS_ID, 10, "Karamouzas_10")),
+		std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 1000, FusionCrowd::ComponentIds::KARAMOUZAS_ID, 15, "Karamouzas_15")),
+		std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 1000, FusionCrowd::ComponentIds::KARAMOUZAS_ID, 20, "Karamouzas_20")),
+
+		std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 1000, FusionCrowd::ComponentIds::HELBING_ID, 0, "Helbing_0")),
+		std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 1000, FusionCrowd::ComponentIds::HELBING_ID, 5, "Helbing_5")),
+		std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 1000, FusionCrowd::ComponentIds::HELBING_ID, 10, "Helbing_10")),
+		std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 1000, FusionCrowd::ComponentIds::HELBING_ID, 15, "Helbing_15")),
+		std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 1000, FusionCrowd::ComponentIds::HELBING_ID, 20, "Helbing_20")),
+
+		std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 1000, FusionCrowd::ComponentIds::ORCA_ID, 0, "ORCA_0")),
+		std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 1000, FusionCrowd::ComponentIds::ORCA_ID, 5, "ORCA_5")),
+		std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 1000, FusionCrowd::ComponentIds::ORCA_ID, 10, "ORCA_10")),
+		std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 1000, FusionCrowd::ComponentIds::ORCA_ID, 15, "ORCA_15")),
+		std::shared_ptr<ITestCase>((ITestCase*) new TradeshowTestCase(1025, 1000, FusionCrowd::ComponentIds::ORCA_ID, 20, "ORCA_20")),
 	};
 
 	std::vector<long long> measurements;
@@ -150,7 +169,7 @@ int main()
 		std::cout << "  Done." << std::endl;
 
 		std::cout << " 3. Saving results..." << std::endl;
-		WriteToFile(testCase, measurements, startTime, folderName);
+		WriteToFile(testCase, measurements, startTime, folderName, false);
 		std::cout << "  Done." << std::endl;
 
 		std::cout << " 4. Cleaning up ..." << std::endl;

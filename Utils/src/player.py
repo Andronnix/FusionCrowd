@@ -136,7 +136,6 @@ class Player:
         rx, ry = (cur[2] - cur[0]) / 2, (cur[3] - cur[1]) / 2
 
         self.canvas.coords(item, x - rx, y - ry, x + rx, y + ry)
-        self.canvas.update_idletasks()
 
     def line(self, p1, p2, color="white", **kwargs):
         sp1 = p1[0] * self.scale, p1[1] * self.scale
@@ -166,7 +165,6 @@ class Player:
         pos = target.pos[0] * self.scale, target.pos[1] * self.scale
 
         self.canvas.coords(item, *pos, *pos1)
-        self.canvas.update_idletasks()
 
     def orientation(self, agt, color="white"):
         pos1 = agt.pos[0] + agt.orient[0] * agt.R, agt.pos[1] + agt.orient[1] * agt.R

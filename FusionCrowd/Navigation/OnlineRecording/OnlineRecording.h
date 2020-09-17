@@ -1,6 +1,8 @@
 #pragma once
 
+#include <list>
 #include <memory>
+#include <vector>
 
 #include "Export/AgentInfo.h"
 #include "Export/IRecording.h"
@@ -30,6 +32,6 @@ namespace FusionCrowd
 		size_t m_prevAgentCount = 0;
 		std::vector<float> m_snapshotTimes;
 
-		std::vector<OnlineRecordingSlice> m_slices;
+		std::list<OnlineRecordingSlice> m_slices;
 	};
 }

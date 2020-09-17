@@ -112,6 +112,10 @@ namespace FusionCrowd
 			return _sim->AddAgent(std::move(info), opId, tacticId, strategyId);
 		}
 
+		void SetMaxRewinds(size_t maxRewinds) override
+		{
+			_sim->SetMaxRewinds(maxRewinds);
+		}
 
 		bool UpdateAgent(AgentParams params) {
 			return _sim->UpdateAgentParams(params);
