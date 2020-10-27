@@ -129,7 +129,7 @@ namespace FusionCrowd
 
 		size_t updates_cnt = 0;
 
-		float Update(float timeStep, bool rewindAvailable)
+		UpdateResult Update(float timeStep, bool rewindAvailable)
 		{
 			std::unordered_map<size_t, AgentUpdate> updates;
 			//std::cout << " Step " << updates_cnt++ << " , timeStep = " << std::to_string(timeStep) << std::endl;
@@ -144,15 +144,11 @@ namespace FusionCrowd
 				UpdateOrient(currentInfo, timeStep, update.newVel, update.newOrient);
 			}
 
-			if(rewindAvailable)
+			float MIN_DT = 0.0001;
+			auto result = CheckCollisions(updates, timeStep, MIN_DT);
+			if(rewindAvailable && result.ttc <= timeStep)
 			{
-				float MIN_DT = 0.0001;
-
-				float collisionTime = CheckCollisions(updates, timeStep, MIN_DT);
-				if(collisionTime <= timeStep)
-				{
-					return Update(collisionTime * 0.95f, false);
-				}
+				return Update(result.ttc * 0.95f, false);
 			}
 
 			for(auto & u : updates)
@@ -161,10 +157,20 @@ namespace FusionCrowd
 			}
 			UpdateNeighbours();
 
-			return timeStep;
+			return {
+				timeStep,
+				result.totalCollisions,
+				result.ignored
+			};
 		}
 
-		float CheckCollisions(const std::unordered_map<size_t, AgentUpdate> & updates, const float stepTime, const float minTimeThreshold)
+		struct CollisionCheckResult {
+			float ttc;
+			size_t totalCollisions;
+			size_t ignored;
+		};
+
+		CollisionCheckResult CheckCollisions(const std::unordered_map<size_t, AgentUpdate> & updates, const float stepTime, const float minTimeThreshold)
 		{
 			float time = stepTime + 1;
 			bool happened = false;
@@ -182,7 +188,7 @@ namespace FusionCrowd
 
 					float cTime = Math::rayCircleTTC(-nVel + agentVel, n.pos - agentOldPos, agent.agent.radius + n.radius);
 
-					if(cTime < 1)
+					if(cTime <= 1)
 					{
 						if(cTime * stepTime >= minTimeThreshold)
 						{
@@ -200,9 +206,19 @@ namespace FusionCrowd
 			//std::cout << "  Collisions: " << count + ignored << ", ignored: " << ignored << std::endl;
 
 			if(!happened)
-				return Math::INFTY;
+			{
+				return {
+					Math::INFTY,
+					(size_t) (count + ignored),
+					(size_t) ignored
+				};
+			}
 
-			return time;
+			return {
+				time,
+				(size_t) (count + ignored),
+				(size_t) ignored
+			};
 		}
 
 		void UpdatePos(AgentSpatialInfo & agent, float timeStep, Vector2 & updatedPos, Vector2 & updatedVel)
@@ -315,7 +331,7 @@ namespace FusionCrowd
 					overlapped++;
 			}
 
-			// if(overlapped > 0) std::cout << "Overlapped : " << overlapped << std::endl;
+			if(overlapped > 0) std::cout << "Overlapped : " << overlapped << std::endl;
 		}
 
 		void Init() {
@@ -382,7 +398,7 @@ namespace FusionCrowd
 		return pimpl->GetClosestObstacles(agentId);
 	}
 
-	float NavSystem::Update(float timeStep, bool rewindAvailable)
+	UpdateResult NavSystem::Update(float timeStep, bool rewindAvailable)
 	{
 		return pimpl->Update(timeStep, rewindAvailable);
 	}

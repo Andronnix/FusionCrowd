@@ -158,6 +158,7 @@
     <ClInclude Include="Group\PotentialTouristGroup.h" />
     <ClInclude Include="Export\AgentInfo.h" />
     <ClInclude Include="Util\ExportConverter.h" />
+    <ClInclude Include="Export\SimulationStepInfo.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

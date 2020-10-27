@@ -35,9 +35,9 @@ namespace FusionCrowd
 		SimulatorFacadeImpl(std::shared_ptr<Simulator> sim) : _sim(sim)
 		{}
 
-		void DoStep(float timeStep)
+		SimulationStepInfo DoStep(float timeStep)
 		{
-			_sim->DoStep(timeStep);
+			return _sim->DoStep(timeStep);
 		}
 
 		OperationStatus SetAgentOp(size_t agentId, ComponentId opId)

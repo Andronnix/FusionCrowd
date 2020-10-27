@@ -1,5 +1,8 @@
 #include "NeighborsSeeker.h"
 
+#include <iostream>
+
+
 #include "Math/consts.h"
 
 #include <unordered_map>
@@ -122,7 +125,12 @@ namespace FusionCrowd
 								result.neighbors.push_back(NeighborInfo(n));
 							}
 
-							result.isOverlapped = result.isOverlapped || (Vector2::Distance(r.GetPos(), n.GetPos()) < (r.radius + n.radius) + Math::EPS);
+							float dist = Vector2::Distance(r.GetPos(), n.GetPos()) - (r.radius + n.radius);
+							if(dist < -0.01f) // - Math::EPS)
+							{
+								result.isOverlapped = true;
+							}
+							//result.isOverlapped = result.isOverlapped || Vector2::Distance(r.GetPos(), n.GetPos()) - (r.radius + n.radius) < -Math::EPS;
 						}
 					}
 				}

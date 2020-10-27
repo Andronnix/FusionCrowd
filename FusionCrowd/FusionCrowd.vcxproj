@@ -24,6 +24,7 @@
     <ClInclude Include="Export\AgentInfo.h" />
     <ClInclude Include="Export\IExternalControlInterface.h" />
     <ClInclude Include="Export\Math\Shapes.h" />
+    <ClInclude Include="Export\SimulationStepInfo.h" />
     <ClInclude Include="Group\GuidedGroup.h" />
     <ClInclude Include="Math\Shapes\ConeShape.h" />
     <ClInclude Include="Math\Shapes\DiskShape.h" />

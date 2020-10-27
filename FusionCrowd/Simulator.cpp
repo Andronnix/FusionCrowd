@@ -1,5 +1,8 @@
 #include "Simulator.h"
 
+#include <iostream>
+
+
 #include "Export/ComponentId.h"
 
 #include "Navigation/NavSystem.h"
@@ -30,10 +33,13 @@ namespace FusionCrowd
 			_recording = OnlineRecording();
 		}
 
-		~SimulatorImpl() = default;
+		~SimulatorImpl() {
+			std::cout << "Sim destroyed";
+		};
 
-		bool DoStep(float timeStep)
+		SimulationStepInfo DoStep(float timeStep)
 		{
+			float calcTime = 0;
 			if(_currentTime < Math::EPS && _isRecording)
 			{
 				_navSystem->Update(0, false);
@@ -58,22 +64,38 @@ namespace FusionCrowd
 			int rewinds = _maxRewinds;
 			float timeLeft = timeStep;
 
+			size_t totalCollisions = 0;
+
 			do {
 				for (auto & oper : _operComponents)
 				{
 					oper.second->Update(timeLeft);
 				}
 
-				float dt = _navSystem->Update(timeLeft, rewinds > 0);
-				timeLeft -= dt;
+				auto result = _navSystem->Update(timeLeft, rewinds > 0);
+				timeLeft -= result.simulatedTime;
+				calcTime += timeLeft;
+
+				// Didn't calculate in one go, therefore dt was calculated once again.
+				if(result.simulatedTime < timeLeft)
+				{
+					calcTime += result.simulatedTime;
+				}
+
+				totalCollisions += result.totalCollisions;
 
 				if (_isRecording) {
-					MakeRecord(dt);
+					MakeRecord(result.simulatedTime);
 				}
 			} while(timeLeft > Math::EPS && rewinds-- > 0);
 
 
-			return true;
+			// TODO: return pointer to step info: number of rewinds, number of collisions on each substep, number of collisions left because of rewind number constraint
+			return {
+				_maxRewinds - rewinds,
+				totalCollisions,
+				calcTime
+			};
 		}
 
 		void MakeRecord(float timeStep)
@@ -614,7 +636,7 @@ namespace FusionCrowd
 	{
 	}
 
-	bool Simulator::DoStep(float timeStep)
+	SimulationStepInfo Simulator::DoStep(float timeStep)
 	{
 		return pimpl->DoStep(timeStep);
 	}

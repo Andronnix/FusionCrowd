@@ -11,6 +11,7 @@
 #include "Export/ModelAgentParams.h"
 #include "Export/NavGraph.h"
 #include "Export/Math/Shapes.h"
+#include "Export/SimulationStepInfo.h"
 
 namespace FusionCrowd
 {
@@ -43,7 +44,7 @@ namespace FusionCrowd
 		class FUSION_CROWD_API ISimulatorFacade
 		{
 		public:
-			virtual void DoStep(float timeStep = 0.1f) = 0;
+			virtual SimulationStepInfo DoStep(float timeStep = 0.1f) = 0;
 
 			virtual OperationStatus SetAgentOp(size_t agentId, ComponentId opId) = 0;
 			virtual OperationStatus SetAgentTactic(size_t agentId, ComponentId tacticID) = 0;

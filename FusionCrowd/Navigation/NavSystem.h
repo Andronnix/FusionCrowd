@@ -18,6 +18,13 @@
 
 namespace FusionCrowd
 {
+	struct UpdateResult
+	{
+		float simulatedTime;
+		size_t totalCollisions;
+		size_t ignoredCollisions;
+	};
+
 	class Obstacle;
 
 	class NavSystem : public INavSystemPublic
@@ -41,7 +48,7 @@ namespace FusionCrowd
 		std::vector<NeighborInfo> GetNeighbours(size_t agentId) const;
 		std::vector<Obstacle> GetClosestObstacles(size_t agentId);
 
-		float Update(float timeStep, bool rewindAvailable); // returns time left
+		UpdateResult Update(float timeStep, bool rewindAvailable);
 
 	public:
 		// INavSystemPublic

@@ -4,8 +4,28 @@ from enum import Enum
 from itertools import zip_longest, tee
 
 
-AgentInfo = namedtuple("AgentInfo", ["agent_id", "type", "pos", "orient", "R"])
-Recording = namedtuple("Recording", ["pos", "steps", "xmin", "ymin", "xmax", "ymax"])
+class AgentInfo:
+    __slots__ = ["agent_id", "type", "pos", "orient", "R"]
+
+    def __init__(self, agent_id, type, pos, orient, R):
+        self.agent_id = agent_id
+        self.type = type
+        self.pos = pos
+        self.orient = orient
+        self.R = R
+
+
+class Recording:
+    __slots__ = ["pos", "steps", "step_times", "xmin", "ymin", "xmax", "ymax"]
+
+    def __init__(self, pos, steps, step_times, xmin, ymin, xmax, ymax):
+        self.pos = pos
+        self.steps = steps
+        self.step_times = step_times
+        self.xmin = xmin
+        self.ymin = ymin
+        self.xmax = xmax
+        self.ymax = ymax
 
 
 class AgentType(Enum):
@@ -32,9 +52,11 @@ def read_recording(filename):
     steps = 0
     with open(filename) as csvfile:
         traj_file = csv.reader(csvfile, delimiter=',')
+        step_times = []
 
         for step, row in enumerate(traj_file):
             step_time = float(row[0])
+            step_times.append(step_time)
             for agent_id, t, x, y, orientx, orienty, radius in grouper(row[1:], 7):
                 info = AgentInfo(int(agent_id), AgentType.read(t), (float(x), float(y)), (float(orientx), float(orienty)), float(radius))
                 minx = min(info.pos[0], minx)
@@ -47,4 +69,4 @@ def read_recording(filename):
         for vals in result.values():
             steps = max(steps, len(vals))
 
-    return Recording(result, steps, xmin=minx, ymin=miny, xmax=maxx, ymax=maxy)
+    return Recording(result, steps, step_times, xmin=minx, ymin=miny, xmax=maxx, ymax=maxy)
