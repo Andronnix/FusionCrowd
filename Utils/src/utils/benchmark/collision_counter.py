@@ -1,4 +1,5 @@
 import math
+import os
 from collections import namedtuple, defaultdict
 from itertools import combinations
 from numbers import Number
@@ -36,6 +37,7 @@ class Point:
         if isinstance(other, Number):
             return Point(self.x * other, self.y * other)
 
+
 def sub(p1, p2):
     return Point(p1[0] - p2[0], p1[1] - p2[1])
 
@@ -69,12 +71,20 @@ def ray_circle_ttc(d, center2, R):
 
 def get_collisions(rec: Recording):
     collisions = set()
-    time_in_collision = defaultdict(lambda: 0)
+    time_in_collision = dict()
+    for agent in rec.pos.keys():
+        time_in_collision[agent] = 0
+
     agent_combos = list(combinations(rec.pos.keys(), 2))
 
     print("Looking for collisions")
+    count = 0
     for step0, step1 in pairwise(range(rec.steps)):
-        print("Working on steps: {} - {}".format(step0, step1))
+        if count == 100:
+            print("Working on steps: {} - {}".format(step0, step1))
+            count = 0
+        else:
+            count += 1
 
         dt = rec.step_times[step1] - rec.step_times[step0]
 
@@ -92,7 +102,7 @@ def get_collisions(rec: Recording):
             dv = v1 - v2
             c = sub(rec_pos_a1[step0].pos, rec_pos_a2[step0].pos)
 
-            collision = ray_circle_ttc(dv, c, 2 * 0.19)
+            collision = ray_circle_ttc(dv, c, 2 * 0.19 - 0.1)
 
             if collision is None:
                 continue
@@ -110,14 +120,23 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("source_recording")
+    parser.add_argument("source_recording_dir")
 
     args = parser.parse_args()
-    collisions, time_in_collision = get_collisions(read_recording(args.source_recording))
+    source_dir = args.source_recording_dir
 
-    with open(args.source_recording + "_collision_time.csv", "w") as fout:
-        result = sorted(time_in_collision.items(), key=lambda at: at[0])
+    for name in os.listdir(source_dir):
+        if not name.endswith("_trajs.csv"):
+            continue
 
-        fout.write("agent,total_collision_time\n")
-        for at in result:
-            fout.write("{},{}\n".format(*at))
+        name = source_dir + name
+        print("Working on {}".format(name))
+
+        collisions, time_in_collision = get_collisions(read_recording(name))
+
+        with open(name + "_collision_time.csv", "w") as fout:
+            result = sorted(time_in_collision.items(), key=lambda at: at[0])
+
+            fout.write("agent,total_collision_time\n")
+            for at in result:
+                fout.write("{},{}\n".format(*at))

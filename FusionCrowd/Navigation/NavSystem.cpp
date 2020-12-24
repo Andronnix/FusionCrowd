@@ -144,10 +144,9 @@ namespace FusionCrowd
 				UpdateOrient(currentInfo, timeStep, update.newVel, update.newOrient);
 			}
 
-			float MIN_DT = 0.0001;
-			auto result = CheckCollisions(updates, timeStep, MIN_DT);
-			if(rewindAvailable && result.ttc <= timeStep)
-			{
+			float MIN_DT = 0.01 * timeStep;
+			CollisionCheckResult result = CheckCollisions(updates, timeStep, MIN_DT);
+			if(rewindAvailable && result.ttc <= timeStep) {
 				return Update(result.ttc * 0.95f, false);
 			}
 
@@ -186,24 +185,29 @@ namespace FusionCrowd
 				{
 					Vector2 nVel = updates.at(n.id).newPos - n.pos;
 
-					float cTime = Math::rayCircleTTC(-nVel + agentVel, n.pos - agentOldPos, agent.agent.radius + n.radius);
+					Math::fpair cTime = Math::rayCircleTTC2(-nVel + agentVel, n.pos - agentOldPos, agent.agent.radius + n.radius - 0.01);
 
-					if(cTime <= 1)
+					float dt = cTime.v2 - cTime.v1;
+					if(std::isnan(cTime.v1))
 					{
-						if(cTime * stepTime >= minTimeThreshold)
-						{
-							count++;
-							happened = true;
-							time = std::min(time, cTime * stepTime);
-						} else
-						{
-							ignored++;
-						}
+						continue;
 					}
+
+					if(dt <= minTimeThreshold || cTime.v1 <= minTimeThreshold)
+					{
+						ignored++;
+						continue;
+					}
+
+					count++;
+					happened = true;
+					time = std::min(time, cTime.v1 * stepTime);
 				}
 			}
 
-			//std::cout << "  Collisions: " << count + ignored << ", ignored: " << ignored << std::endl;
+#ifdef _DEBUG
+			std::cout << "  Collisions: " << count + ignored << ", ignored: " << ignored << ", dt: " << stepTime << std::endl;
+#endif
 
 			if(!happened)
 			{
@@ -331,7 +335,7 @@ namespace FusionCrowd
 					overlapped++;
 			}
 
-			if(overlapped > 0) std::cout << "Overlapped : " << overlapped << std::endl;
+			//if(overlapped > 0) std::cout << "Overlapped : " << overlapped << std::endl;
 		}
 
 		void Init() {

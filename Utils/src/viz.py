@@ -2,7 +2,7 @@ import random
 import argparse
 from itertools import tee
 from player import Player
-from navgraph.navgraph import NavGraph
+from utils.navgraph.navgraph import NavGraph
 from collections import namedtuple
 from recordings import AgentType, Recording, read_recording
 
@@ -140,12 +140,11 @@ def draw_mesh(player: Player, mesh: NavMesh, show_text=True):
         p_last = mesh.vertices[node.vertices[-1]]
         p0     = mesh.vertices[node.vertices[0]]
         player.line(p_last, p0, color="#ccc")
-        #print(p0)
         if show_text:
             player.text(node.center, str(id), color="#ccc")
 
     for v0, v1 in mesh.obstacles:
-        player.vector(mesh.vertices[v0], mesh.vertices[v1], "red")
+        player.line(mesh.vertices[v0], mesh.vertices[v1], "red")
 
 
 if __name__ == "__main__":

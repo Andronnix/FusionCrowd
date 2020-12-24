@@ -25,6 +25,7 @@ namespace ORCA
 	void ORCAComponent::AddAgent(size_t id)
 	{
 		_agents.insert(id);
+		_navSystem->GetSpatialInfo(id).inertiaEnabled = false;
 	}
 
 	bool ORCAComponent::DeleteAgent(size_t id)

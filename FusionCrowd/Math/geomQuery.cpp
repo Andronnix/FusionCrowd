@@ -1,6 +1,7 @@
 #include "geomQuery.h"
 #include "Math/consts.h"
 #include "Math/Util.h"
+#include <algorithm>
 
 using namespace DirectX::SimpleMath;
 
@@ -8,7 +9,6 @@ namespace FusionCrowd
 {
 	namespace Math
 	{
-
 		////////////////////////////////////////////////////////////////
 
 		// determines the time to collision of a ray from the origin with a circle (center, radius)
@@ -26,12 +26,39 @@ namespace FusionCrowd
 			float t1 = (-b + sqrtDiscr) / (2.f * a);
 			// If the points of collision have different signs, it means I'm already colliding
 			if ((t0 < 0.f && t1 > 0.f) || (t1 < 0.f && t0 > 0.f)) return 0.f;
-			if (t0 < t1 && t0 > 0.f)
+			if (t0 <= t1 && t0 >= 0.f)
 				return t0;
 			else if (t1 > 0.f)
 				return t1;
 			else
 				return INFTY;
+		}
+
+		// determines the time to collision of a ray from the origin with a circle (center, radius)
+		fpair rayCircleTTC2(const Vector2 & dir, const Vector2 & center, float radius) {
+			float a = dir.LengthSquared();
+			if(abs(a) < Math::EPS)
+			{
+				return {std::nanf(""), std::nanf("")};
+			}
+
+			float b = -2 * dir.Dot(center);
+			float c = center.LengthSquared() - (radius * radius);
+			float discr = b * b - 4 * a * c;
+			if (discr < 0.f) {
+				return {std::nanf(""), std::nanf("")};
+			}
+			const float sqrtDiscr = sqrtf(discr);
+			float t0 = (-b - sqrtDiscr) / (2.f * a);
+			float t1 = (-b + sqrtDiscr) / (2.f * a);
+			// If the points of collision have different signs, it means I'm already colliding
+
+			if(t0 > 1 || t1 < 0)
+			{
+				return {std::nanf(""), std::nanf("")};
+			}
+
+			return {std::max(t0, 0.0f), std::min(t1, 1.0f)};
 		}
 
 		////////////////////////////////////////////////////////////////

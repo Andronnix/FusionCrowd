@@ -159,12 +159,13 @@ int main()
 	};
 
 	std::vector<CaseDescription> allCases = {
-		//{FusionCrowd::ComponentIds::HELBING_ID, "Helbing_"},
+		{FusionCrowd::ComponentIds::HELBING_ID, "Helbing_"},
 		//{FusionCrowd::ComponentIds::ORCA_ID, "ORCA_"},
-		{FusionCrowd::ComponentIds::KARAMOUZAS_ID, "Karamouzas_"},
+		//{FusionCrowd::ComponentIds::KARAMOUZAS_ID, "Karamouzas_"},
+		//{FusionCrowd::ComponentIds::PEDVO_ID, "PEDVO_"},
 	};
 
-	std::vector<size_t> rewinds = {/*0, 5, 10, 15, */20 };
+	std::vector<size_t> rewinds = { 0, 1, 4, 7, 10 };
 
 	std::vector<long long> measurements;
 	time_point startTime;
@@ -172,11 +173,10 @@ int main()
 	std::string folderName = "Runs\\" + date::format("%Y%m%d", std::chrono::system_clock::now());
 	_mkdir(folderName.c_str());
 
-	//for(auto testCase : cases)
 	for(auto desc : allCases)
 	{
 		for(auto r : rewinds) {
-			TradeshowTestCase testCase(1025, 1000, desc.component, r, desc.name + std::to_string(r));
+			TradeshowTestCase testCase(1000, 1000, desc.component, r, desc.name + std::to_string(r));
 			std::string namePrefix = GetFileNamePrefix(&testCase, startTime, folderName, false);
 
 			std::cout << "Case " << testCase.GetName() << std::endl

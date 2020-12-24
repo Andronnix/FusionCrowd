@@ -10,6 +10,10 @@ namespace TestFusionCrowd
 		: ITestCase(agentsNum, steps, writeTraj), _op(op)
 	{ }
 
+	ExchangeCircleCase::ExchangeCircleCase(size_t agentsNum, size_t steps, ComponentId op, size_t maxRewinds, std::string customName)
+		: ITestCase(agentsNum, steps, true), _op(op), _rewinds(maxRewinds), _name(customName)
+	{ }
+
 	void ExchangeCircleCase::Pre()
 	{
 		std::shared_ptr<ISimulatorBuilder> builder(BuildSimulator(), BuilderDeleter);
@@ -18,6 +22,7 @@ namespace TestFusionCrowd
 			->WithOp(_op);
 
 		_sim = std::shared_ptr<FusionCrowd::ISimulatorFacade>(builder->Build(), SimulatorFacadeDeleter);
+		_sim->SetMaxRewinds(_rewinds);
 
 
 		const float gap = 0.1f;

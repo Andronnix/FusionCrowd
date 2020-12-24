@@ -6,6 +6,11 @@ namespace FusionCrowd
 {
 	namespace Math
 	{
+		struct fpair
+		{
+			float v1, v2;
+		};
+
 		/*!
 			*	@brief		Computes the time to collision between a ray and a circle
 			*
@@ -19,6 +24,8 @@ namespace FusionCrowd
 			*	@returns	The expected "time" to collision ("infinity" if there is no collision).
 			*/
 		float rayCircleTTC(const DirectX::SimpleMath::Vector2 & dir, const DirectX::SimpleMath::Vector2 & center, float radius);
+
+		fpair rayCircleTTC2(const DirectX::SimpleMath::Vector2 & dir, const DirectX::SimpleMath::Vector2 & center, float radius);
 
 		/*!
 			*	@brief		Perform spherical linear interpolation between two vectors

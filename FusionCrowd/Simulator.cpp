@@ -37,8 +37,10 @@ namespace FusionCrowd
 			std::cout << "Sim destroyed";
 		};
 
+		size_t steps = 0;
 		SimulationStepInfo DoStep(float timeStep)
 		{
+			std::cout << "Step " << steps++ << ", time " << _currentTime << std::endl;
 			float calcTime = 0;
 			if(_currentTime < Math::EPS && _isRecording)
 			{
@@ -72,7 +74,7 @@ namespace FusionCrowd
 					oper.second->Update(timeLeft);
 				}
 
-				auto result = _navSystem->Update(timeLeft, rewinds > 0);
+				auto result = _navSystem->Update(timeLeft, _maxRewinds > 0);
 				timeLeft -= result.simulatedTime;
 				calcTime += timeLeft;
 
@@ -88,6 +90,8 @@ namespace FusionCrowd
 					MakeRecord(result.simulatedTime);
 				}
 			} while(timeLeft > Math::EPS && rewinds-- > 0);
+
+			_currentTime -= timeLeft;
 
 
 			// TODO: return pointer to step info: number of rewinds, number of collisions on each substep, number of collisions left because of rewind number constraint
@@ -164,7 +168,7 @@ namespace FusionCrowd
 
 			std::uniform_real_distribution<float> dist(0.9f, 1.1f);
 			info.prefSpeed *= dist(_rnd_seed);
-
+			info.inertiaEnabled = false;
 			info.useNavMeshObstacles = (tacticId == ComponentIds::NAVMESH_ID);
 
 			Vector2 goal_pos = _tacticComponents[tacticId]->GetClosestAvailablePoint(info.GetPos());

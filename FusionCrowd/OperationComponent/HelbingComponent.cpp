@@ -18,7 +18,7 @@ namespace FusionCrowd
 	namespace Helbing
 	{
 		HelbingComponent::HelbingComponent(std::shared_ptr<NavSystem> navSystem)
-			: HelbingComponent(navSystem, 2000.f, 2000.f, 0.5f, 1.2e5f, 2.4e5f, 0.08f)
+			: HelbingComponent(navSystem, 2000.f, 4000.f, 0.5f, 1.2e4f, 2.4e4f, 0.015f)
 		{ }
 
 		HelbingComponent::HelbingComponent(std::shared_ptr<NavSystem> navSystem, float AGENT_SCALE, float OBST_SCALE, float REACTION_TIME, float BODY_FORCE, float FRICTION, float FORCE_DISTANCE):
